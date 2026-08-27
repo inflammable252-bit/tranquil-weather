@@ -1,0 +1,57 @@
+* {
+    border: 1px solid black;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+main {
+    position: relative;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+}
+aside#location-sidebar {
+    display: none;
+    grid-column: 1/2;
+    grid-row: 1/-1;
+}
+img#sidebar-button {
+    position: absolute;
+    height: 35px;
+    width: 35px;
+    background-color: gray;
+}
+article#current-weather-wrapper {
+    /* grid-column: 2/3; */
+    grid-row: 1/2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+main section {
+    /* grid-column: 2/3; */
+}
+
+div#info-wrapper, div#hourly-wrapper, div#forecast-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+}
+
+article.card {
+    /* width: fit-content; */
+}
+
+@media (width >= 768px) {
+    main {
+    grid-template-columns: minmax(min-content, 0.15fr) 1fr;
+    }
+    aside#location-sidebar {
+        display: block;
+    }
+    img#sidebar-button {
+        display: none;
+    }
+}

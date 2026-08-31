@@ -5,12 +5,13 @@
 body {
     display: flex;
     flex-direction: column;
+    height: 100dvh;
 }
 main {
+    height: 100%;
     position: relative;
-    height: 100dvh;
     display: grid;
-    grid-template-rows: repeat(3, 1fr);
+    grid-template-rows: 1fr repeat(2, 1fr);
 }
 aside#location-sidebar {
     display: none;
@@ -41,7 +42,7 @@ div#info-wrapper, div#hourly-wrapper, div#forecast-wrapper {
 }
 
 article.card {
-    /* width: fit-content; */
+    
 }
 
 @media (width >= 768px) {

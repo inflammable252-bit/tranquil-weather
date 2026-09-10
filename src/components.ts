@@ -1,30 +1,5 @@
 export { domCurrent, domTodayInfo, Connection };
 
-export interface weatherType {
-  resolvedAddress: string | number;
-  currentConditions: {
-    temp: number;
-    conditions: string;
-    winddir: number;
-    windspeed: number;
-    humidity: number;
-    uvindex: number;
-  };
-  alerts: alertsType[];
-  conditions: string;
-  days: daysType[];
-}
-export interface daysType {
-  tempmax: number;
-  tempmin: number;
-  feelslike: number;
-}
-export interface alertsType {
-  event: string;
-  headline: string;
-  description: string;
-}
-
 const domCurrent = {
   temp: "current-temp",
   loc: "current-location",

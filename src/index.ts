@@ -2,7 +2,7 @@ import "./style.css";
 import "./reset.css";
 
 import { domCurrent, domTodayInfo, Connection } from "./components.js";
-import type { weatherType } from "./components.js";
+import normalArrow from "./images/caret-up-bold-svgrepo-com.png";
 
 const mainConnection = new Connection("sAn diEgo");
 
@@ -63,11 +63,23 @@ function updateTodaySection(data: weatherType | undefined) {
 
   const windCard = document.getElementById(domTodayInfo.wind);
   const windDirText = document.createElement("p");
-  windDirText.textContent = String(data.currentConditions.winddir);
+  const windImg = document.createElement("img");
+  windImg.src = normalArrow;
+  const windValue = data.currentConditions.winddir;
+  windImg.style.transform = String(`rotate(${windValue}deg)`);
+
+  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  const windDir = directions[Math.round(windValue / 45) % 8];
+  windDirText.textContent = String(windDir);
   windCard!.append(windDirText);
   const windSpeedText = document.createElement("p");
-  windSpeedText.textContent = String(data.currentConditions.windspeed + "mph");
-  windCard!.append(windDirText, windSpeedText);
+  windSpeedText.textContent = String(data.currentConditions.windspeed + " mph");
+  windCard!.append(windDirText, windImg, windSpeedText);
+  console.log("wind: ", {
+    deg: windValue,
+    direction: windDir,
+    speed: windSpeedText.textContent,
+  });
 
   const humidityCard = document.getElementById(domTodayInfo.humidity);
   const humidityText = document.createElement("p");

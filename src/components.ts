@@ -1,17 +1,28 @@
-export { domCurrent, Connection };
+export { domCurrent, domTodayInfo, Connection };
 
 export interface weatherType {
   resolvedAddress: string | number;
   currentConditions: {
     temp: number;
     conditions: string;
+    winddir: number;
+    windspeed: number;
+    humidity: number;
+    uvindex: number;
   };
+  alerts: alertsType[];
   conditions: string;
   days: daysType[];
 }
 export interface daysType {
   tempmax: number;
   tempmin: number;
+  feelslike: number;
+}
+export interface alertsType {
+  event: string;
+  headline: string;
+  description: string;
 }
 
 const domCurrent = {
@@ -20,6 +31,14 @@ const domCurrent = {
   condition: "current-condition",
   high: "current-high",
   low: "current-low",
+};
+
+const domTodayInfo = {
+  feels: "feels-like",
+  wind: "wind",
+  humidity: "humidity",
+  uv: "uv-index",
+  air: "air-quality",
 };
 
 class Connection {
@@ -45,7 +64,7 @@ class Connection {
   protected async request() {
     try {
       const response = await fetch(
-        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${this.location}?unitGroup=us&include=days,hours,current,alerts,events&key=${this.#getKey()}&contentType=json`,
+        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${this.location}?unitGroup=us&elements=add:aqius&include=days,hours,current,alerts,events&key=${this.#getKey()}&contentType=json`,
       );
       const data = await response.json();
       this.weatherData = data;

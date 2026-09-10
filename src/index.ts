@@ -1,8 +1,10 @@
 import "./style.css";
 import "./reset.css";
 
-import { domCurrent, Connection } from "./components.js";
+import { domCurrent, domTodayInfo, Connection } from "./components.js";
 import type { weatherType } from "./components.js";
+
+const mainConnection = new Connection("sAn diEgo");
 
 function updateEleText(id: string, value: string | number) {
   if (id === null) return;
@@ -12,9 +14,7 @@ function updateEleText(id: string, value: string | number) {
     return;
   }
   element.textContent = String(value);
-  console.log(element);
 }
-
 function updateCurrentSection(data: weatherType | undefined) {
   if (!data) return;
 
@@ -36,8 +36,63 @@ function updateCurrentSection(data: weatherType | undefined) {
   updateEleText(domCurrent.low, `Low: ${data.days[0]!.tempmin}`);
 }
 
-const mainConnection = new Connection("sAn diEgo");
-updateCurrentSection(await mainConnection.getData());
+function updateAlertSection(data: weatherType | undefined) {
+  const alertEle = document.getElementById("alert");
+  data!.alerts.forEach((alert) => {
+    const alertDrawer = document.createElement("details");
+    alertDrawer.classList.add("alert-item");
+
+    const alertHead = document.createElement("summary");
+    alertHead.textContent = `${alert.event}: ${alert.headline}`;
+
+    const alertBody = document.createElement("p");
+    alertBody.textContent = alert.description;
+
+    alertDrawer.append(alertHead, alertBody);
+    alertEle?.append(alertDrawer);
+  });
+}
+
+function updateTodaySection(data: weatherType | undefined) {
+  if (!data) return;
+
+  const feelsCard = document.getElementById(domTodayInfo.feels);
+  const feelsText = document.createElement("p");
+  feelsText.textContent = String(data.days[0]!.feelslike + "F");
+  feelsCard!.append(feelsText);
+
+  const windCard = document.getElementById(domTodayInfo.wind);
+  const windDirText = document.createElement("p");
+  windDirText.textContent = String(data.currentConditions.winddir);
+  windCard!.append(windDirText);
+  const windSpeedText = document.createElement("p");
+  windSpeedText.textContent = String(data.currentConditions.windspeed + "mph");
+  windCard!.append(windDirText, windSpeedText);
+
+  const humidityCard = document.getElementById(domTodayInfo.humidity);
+  const humidityText = document.createElement("p");
+  humidityText.textContent = String(data.currentConditions.humidity + "%");
+  humidityCard!.append(humidityText);
+
+  const uvCard = document.getElementById(domTodayInfo.uv);
+  const uvText = document.createElement("p");
+  uvText.textContent = String(data.currentConditions.uvindex);
+  uvCard!.append(uvText);
+
+  const airCard = document.getElementById(domTodayInfo.air);
+  const airText = document.createElement("p");
+  airText.textContent = String(data.currentConditions.aqius);
+  airCard!.append(airText);
+}
+
+function initializeAllSections(data: weatherType | undefined) {
+  if (!data) return;
+  updateCurrentSection(data);
+  updateTodaySection(data);
+  updateAlertSection(data);
+}
+initializeAllSections(await mainConnection.getData());
+
 // Object.entries(domCurrent).forEach((item) => {
 //   console.log(item);
 // });

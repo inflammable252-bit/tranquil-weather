@@ -1,5 +1,10 @@
 declare module "*.css";
 
+declare module "*.png" {
+  const value: string;
+  export default value;
+}
+
 interface weatherType {
   resolvedAddress: string | number;
   currentConditions: {
@@ -13,14 +18,22 @@ interface weatherType {
   };
   alerts: alertsType[];
   conditions: string;
-  days: daysType[];
+  days: dayType[];
   datetime: string;
 }
 
-interface daysType {
+interface dayType {
+  hours: hourType[];
   tempmax: number;
   tempmin: number;
-  feelslike: number;
+  feelslike: string;
+}
+
+interface hourType {
+  datetime: "string";
+  temp: number;
+  wind: number;
+  precip: number;
 }
 
 interface alertsType {

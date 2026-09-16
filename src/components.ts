@@ -21,7 +21,7 @@ class Connection {
   constructor(location: string | number) {
     this.location = location;
   }
-  public weatherData?: weatherType;
+  public weatherData?: test;
   #getKey() {
     return process.env.VC_KEY;
   }
@@ -50,7 +50,7 @@ class Connection {
   setLoc(loc: string) {
     this.location = loc;
   }
-  async getData(): Promise<weatherType | undefined> {
+  async getData(): Promise<test | undefined> {
     await this.request();
     console.log("Data: ", this.weatherData);
     return this.weatherData;

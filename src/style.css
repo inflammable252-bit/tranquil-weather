@@ -76,6 +76,13 @@ div#forecast-wrapper {
   grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
 }
 
+article.hour div.hour-arrow {
+  background-image: url(./images/caret-up-bold-svgrepo-com.png);
+  background-size: 100%;
+  height: 2rem;
+  width: 2rem;
+}
+
 @media (width >= 768px) {
   body {
     --bg-size: 70%;

@@ -69,9 +69,7 @@ function updateTodaySection(data: weatherType | undefined) {
   const windImg = document.createElement("img");
   const windValue = data.currentConditions.winddir;
   windImg.style.transform = String(`rotate(${windValue}deg)`);
-  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-  const windDir = directions[Math.round(windValue / 45) % 8];
-  windDirText.textContent = String(windDir);
+  windDirText.textContent = String(getWindDir(windValue));
   windCard!.append(windDirText);
   const windSpeedText = document.createElement("p");
   const windSpeedValue = data.currentConditions.windspeed;
@@ -96,6 +94,12 @@ function updateTodaySection(data: weatherType | undefined) {
   const airText = document.createElement("p");
   airText.textContent = String(data.currentConditions.aqius);
   airCard!.append(airText);
+}
+
+function getWindDir(angle: number) {
+  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  const windDir = directions[Math.round(angle / 45) % 8];
+  return windDir;
 }
 
 function updateHourSection(data: weatherType) {
@@ -133,7 +137,6 @@ function getNext12Hours(days: dayType[]) {
     }
     next12Hours.push(hour);
   }
-  console.log(next12Hours);
   return next12Hours;
 }
 
@@ -154,10 +157,24 @@ function createHourCards(
     if (hourTextValue >= 13) hourTextValue -= 12;
     hourText.textContent = `${hourTextValue} ${hourAMorPM}`;
     const hourTemp = document.createElement("p");
+    hourTemp.classList.add("hour-temp");
     hourTemp.textContent = String(day!.temp);
-    card.append(hourText, hourTemp);
+
+    const hourWindDiv = document.createElement("div");
+    hourWindDiv.classList.add("hour-wind-wrapper");
+    const hourWind = document.createElement("p");
+    hourWind.classList.add("hour-wind");
+    hourWind.textContent = String(day!.windspeed) + " mph";
+    const hourWindArrow = document.createElement("div");
+    hourWindArrow.classList.add("hour-arrow");
+    hourWindDiv.append(hourWind, hourWindArrow);
+    hourWindArrow.style.transform = String(`rotate(${day!.winddir}deg)`);
+
+    const hourPrecip = document.createElement("p");
+    hourPrecip.classList.add("hour-precip");
+    hourPrecip.textContent = String(day!.precip) || "";
+    card.append(hourText, hourTemp, hourWindDiv, hourPrecip);
     wrapper.append(card);
-    // console.log(hour.day.datetime);
   });
 }
 

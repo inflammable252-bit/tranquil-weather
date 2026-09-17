@@ -32,7 +32,8 @@ interface dayType {
 interface hourType {
   datetime: "string";
   temp: number;
-  wind: number;
+  winddir: number;
+  windspeed: number;
   precip: number;
 }
 

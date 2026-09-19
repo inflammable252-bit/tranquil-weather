@@ -4,8 +4,14 @@ import "./reset.css";
 import { domCurrent, domTodayInfo, Connection } from "./components.js";
 import normalArrow from "./images/caret-up-bold-svgrepo-com.png";
 import doubleArrow from "./images/caret-double-up-bold-svgrepo-com.png";
+import rain from "./images/water-svgrepo-com.png";
+import snow from "./images/snow-svgrepo-com.png";
 
-const mainConnection = new Connection("las vegas");
+const mainConnection = new Connection("juneau");
+let unitGlobal = "F";
+const unitWind = unitGlobal === "C" ? "km/h" : "mph";
+
+unitGlobal = Math.floor(Math.random() * 2) === 0 ? "F" : "C";
 
 function updateEleText(id: string, value: string | number) {
   if (id === null) return;
@@ -19,7 +25,10 @@ function updateEleText(id: string, value: string | number) {
 function updateCurrentSection(data: weatherType | undefined) {
   if (!data) return;
 
-  updateEleText(domCurrent.temp, data.currentConditions.temp);
+  updateEleText(
+    domCurrent.temp,
+    `${data.currentConditions.temp} ${unitGlobal}`,
+  );
 
   const address: string[] = [];
   if (typeof data.resolvedAddress === "string") {
@@ -32,9 +41,13 @@ function updateCurrentSection(data: weatherType | undefined) {
   }
   updateEleText(domCurrent.loc, address.join(" "));
 
-  updateEleText(domCurrent.condition, data.currentConditions.conditions);
-  updateEleText(domCurrent.high, `High: ${data.days[0]!.tempmax}`);
-  updateEleText(domCurrent.low, `Low: ${data.days[0]!.tempmin}`);
+  updateEleText(
+    domCurrent.high,
+    `High: ${data.days[0]!.tempmax} ${unitGlobal}`,
+  );
+  updateEleText(domCurrent.low, `Low: ${data.days[0]!.tempmin} ${unitGlobal}`);
+
+  updateEleText(domCurrent.condition, data.days[0]!.description);
 }
 
 function updateAlertSection(data: weatherType | undefined) {
@@ -73,7 +86,7 @@ function updateTodaySection(data: weatherType | undefined) {
   windCard!.append(windDirText);
   const windSpeedText = document.createElement("p");
   const windSpeedValue = data.currentConditions.windspeed;
-  windSpeedText.textContent = String(windSpeedValue + " mph");
+  windSpeedText.textContent = `${windSpeedValue} ${unitWind}`;
   windImg.src = windSpeedValue <= 25 ? normalArrow : doubleArrow;
   windCard!.append(windDirText, windImg, windSpeedText);
 
@@ -141,41 +154,119 @@ function getNext12Hours(days: dayType[]) {
 }
 
 function createHourCards(
-  days: (hourType | undefined)[] | undefined,
+  hours: (hourType | undefined)[] | undefined,
   wrapper: HTMLElement | null,
 ) {
-  if (!days || !wrapper) return;
+  if (!hours || !wrapper) return;
   // console.log("Hours: ", hours);
-  days.forEach((day) => {
+  hours.forEach((hour) => {
     const card = document.createElement("article");
     card.classList.add("card", "hour");
     const hourText = document.createElement("p");
-    let hourTextValue = parseInt(day!.datetime.slice(0, 2));
-    let hourAMorPM = "PM";
-    if (hourTextValue < 12) hourAMorPM = "AM";
-    if (hourTextValue === 0) hourTextValue = 12;
-    if (hourTextValue >= 13) hourTextValue -= 12;
-    hourText.textContent = `${hourTextValue} ${hourAMorPM}`;
+    const hourTextValue = hour!.datetime;
+    hourText.textContent = getHour(hourTextValue);
+
     const hourTemp = document.createElement("p");
     hourTemp.classList.add("hour-temp");
-    hourTemp.textContent = String(day!.temp);
+    hourTemp.textContent = `${hour!.temp} ${unitGlobal}`;
 
     const hourWindDiv = document.createElement("div");
     hourWindDiv.classList.add("hour-wind-wrapper");
     const hourWind = document.createElement("p");
     hourWind.classList.add("hour-wind");
-    hourWind.textContent = String(day!.windspeed) + " mph";
+    hourWind.textContent = `${hour!.windspeed} ${unitWind}`;
     const hourWindArrow = document.createElement("div");
     hourWindArrow.classList.add("hour-arrow");
     hourWindDiv.append(hourWind, hourWindArrow);
-    hourWindArrow.style.transform = String(`rotate(${day!.winddir}deg)`);
+    hourWindArrow.style.transform = String(`rotate(${hour!.winddir}deg)`);
 
-    const hourPrecip = document.createElement("p");
-    hourPrecip.classList.add("hour-precip");
-    hourPrecip.textContent = String(day!.precip) || "";
-    card.append(hourText, hourTemp, hourWindDiv, hourPrecip);
+    const hourPrecipWrapper = document.createElement("div");
+    hourPrecipWrapper.classList.add("hour-precip-wrapper");
+
+    insertPrecip("hour", hour, hourPrecipWrapper);
+
+    card.append(hourText, hourTemp, hourWindDiv, hourPrecipWrapper);
     wrapper.append(card);
   });
+}
+
+function updateForecast(data: weatherType | undefined) {
+  if (!data) return;
+  const forecastWrapper = document.getElementById("forecast-wrapper");
+  const daysArr = getWeek(data.days);
+  console.log("days array: ", daysArr);
+  createForecastCards(daysArr, forecastWrapper);
+}
+
+function getWeek(days: dayType[]) {
+  const next7Days = [];
+  for (let i = 0; i < 7; i++) {
+    next7Days.push(days[i]);
+  }
+  return next7Days;
+}
+
+function createForecastCards(
+  days: (dayType | undefined)[],
+  wrapper: HTMLElement | null,
+) {
+  if (!days || !wrapper) return;
+  days.forEach((day) => {
+    if (!day) return;
+    const card = document.createElement("article");
+    card.classList.add("card", "forecast");
+
+    const date = document.createElement("p");
+    date.classList.add("forecast-date");
+    const dateMonth = parseInt(day.datetime.slice(5, 7));
+    const dateDay = day.datetime.slice(8);
+    date.textContent = `${dateMonth}/${dateDay}`;
+
+    const forecastTemp = document.createElement("p");
+    forecastTemp.classList.add("forecast-temp");
+    forecastTemp.textContent = `${day.temp} ${unitGlobal}`;
+
+    const forecastWind = document.createElement("p");
+    forecastWind.classList.add("forecast-wind");
+    forecastWind.textContent = `${day.windspeed} ${unitWind}`;
+
+    const forecastPrecipWrapper = document.createElement("div");
+    forecastPrecipWrapper.classList.add("forecast-precip-wrapper");
+
+    insertPrecip("forecast", day, forecastPrecipWrapper);
+
+    card.append(date, forecastTemp, forecastPrecipWrapper);
+    wrapper.append(card);
+  });
+}
+
+function insertPrecip(
+  classPrefix: string,
+  apiObj: dayType | hourType | undefined,
+  wrapper: HTMLElement | null,
+) {
+  if (!apiObj || !wrapper) return;
+  const precip = document.createElement("p");
+  precip.classList.add(`${classPrefix}-precip`);
+  precip.textContent = String(apiObj.precipprob) + "% ";
+  wrapper.append(precip);
+
+  const precipArr = apiObj.preciptype;
+  precipArr.forEach((type) => {
+    const icon = document.createElement("img");
+    icon.src = type === "rain" || type === "freezingrain" ? rain : snow;
+    icon.classList.add("forecast-precip-icon", "precip-icon");
+    wrapper.append(icon);
+  });
+}
+
+function getHour(timeString: string) {
+  let hourString = parseInt(timeString.slice(0, 2));
+  let hourAMorPM = "PM";
+  if (hourString < 12) hourAMorPM = "AM";
+  if (hourString === 0) hourString = 12;
+  if (hourString >= 13) hourString -= 12;
+  return `${hourString} ${hourAMorPM}`;
 }
 
 function initializeAllSections(data: weatherType | undefined) {
@@ -184,8 +275,9 @@ function initializeAllSections(data: weatherType | undefined) {
   updateTodaySection(data);
   updateAlertSection(data);
   updateHourSection(data);
+  updateForecast(data);
 }
-initializeAllSections(await mainConnection.getData());
+initializeAllSections(await mainConnection.getData(unitGlobal));
 
 // Object.entries(domCurrent).forEach((item) => {
 //   console.log(item);

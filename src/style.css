@@ -77,8 +77,14 @@ div#forecast-wrapper {
 }
 
 article.hour div.hour-arrow {
+  border-radius: 50%;
   background-image: url(./images/caret-up-bold-svgrepo-com.png);
-  background-size: 100%;
+  background-size: cover;
+  height: 2rem;
+  width: 2rem;
+}
+
+img.precip-icon {
   height: 2rem;
   width: 2rem;
 }

@@ -36,10 +36,11 @@ class Connection {
   //         console.log((error as Error).message, "Doesn't exist!")
   //     }
   // }
-  protected async request() {
+  protected async request(unit: string) {
     try {
+      const unitGroup = unit === "C" ? "metric" : "us";
       const response = await fetch(
-        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${this.location}?unitGroup=us&elements=add:aqius&include=days,hours,current,alerts,events&key=${this.#getKey()}&contentType=json`,
+        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${this.location}?unitGroup=${unitGroup}&elements=add:aqius&include=days,hours,current,alerts,events&key=${this.#getKey()}&contentType=json`,
       );
       const data = await response.json();
       this.weatherData = data;
@@ -50,8 +51,8 @@ class Connection {
   setLoc(loc: string) {
     this.location = loc;
   }
-  async getData(): Promise<weatherType | undefined> {
-    await this.request();
+  async getData(unit: string): Promise<weatherType | undefined> {
+    await this.request(unit);
     console.log("Data: ", this.weatherData);
     return this.weatherData;
   }

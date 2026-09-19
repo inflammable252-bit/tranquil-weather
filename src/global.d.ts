@@ -18,15 +18,24 @@ interface weatherType {
   };
   alerts: alertsType[];
   conditions: string;
+  icon: string;
   days: dayType[];
   datetime: string;
 }
 
 interface dayType {
+  description: string;
+  windspeed: number;
+  datetime: string;
   hours: hourType[];
+  temp: number;
   tempmax: number;
   tempmin: number;
   feelslike: string;
+  icon: string;
+  precip: number;
+  precipprob: number;
+  preciptype: string[];
 }
 
 interface hourType {
@@ -35,6 +44,8 @@ interface hourType {
   winddir: number;
   windspeed: number;
   precip: number;
+  precipprob: number;
+  preciptype: string[];
 }
 
 interface alertsType {

@@ -8,6 +8,10 @@
 <body>
     <header>
         <h1>Tranquil Weather</h1>
+        <form id="search-form">
+            <input type="text" id="searchbar"/>
+            <button type="submit" id="search-button">Search</button>
+        </form>
     </header>
     <main>
         <aside id="location-sidebar">
@@ -22,6 +26,11 @@
             <p id="current-high">High</p>
             <p id="current-low">Low</p>
             <p id="current-condition">Current condition</p>
+            <div id="convert-wrapper">
+                <p id="F" class="convert-select">F</p>
+                <p>|</p>
+                <p id="C">C</p>
+            </div>
         </article>
         <section id="today">
             <div id="alert"></div>

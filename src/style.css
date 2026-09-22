@@ -58,6 +58,25 @@ article#current-weather-wrapper {
   align-items: center;
   justify-content: center;
 }
+div#convert-wrapper {
+  padding: 0.2rem;
+  display: flex;
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  p {
+    width: 1em;
+    text-align: center;
+  }
+  p.convert-select {
+    font-weight: bold;
+  }
+  p#F {
+  }
+  p#C {
+  }
+}
 section#today {
   article#wind {
     img {

@@ -7,11 +7,53 @@ import doubleArrow from "./images/caret-double-up-bold-svgrepo-com.png";
 import rain from "./images/water-svgrepo-com.png";
 import snow from "./images/snow-svgrepo-com.png";
 
-const mainConnection = new Connection("juneau");
+let location: string | number;
+location = "las vegas";
+const mainConnection = new Connection(location);
 let unitGlobal = "F";
-const unitWind = unitGlobal === "C" ? "km/h" : "mph";
+let unitWind: string;
 
-unitGlobal = Math.floor(Math.random() * 2) === 0 ? "F" : "C";
+initialize();
+
+async function initialize() {
+  mainConnection.setLoc(location);
+  mainConnection.setUnit(unitGlobal);
+  unitWind = mainConnection.unit === "metric" ? "km/h" : "mph";
+  initializeAllSections(await mainConnection.getData());
+}
+
+const searchForm = document.getElementById("search-form") as HTMLFormElement;
+const searchbar = document.getElementById("searchbar") as HTMLInputElement;
+const searchButton = document.getElementById(
+  "search-button",
+) as HTMLButtonElement;
+searchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  location = searchbar.value;
+  initialize();
+  searchbar.value = "";
+});
+
+const convertTextDiv = document.getElementById("convert-wrapper");
+convertTextDiv?.addEventListener("click", (e) => {
+  const target = e.target as HTMLElement;
+  if (!target) return;
+  const id = target.id;
+  switch (id) {
+    case "F":
+      target.classList.add("convert-select");
+      convertTextDiv.children[2]?.classList.remove("convert-select");
+      unitGlobal = "F";
+      break;
+    case "C":
+      console.log("celsius");
+      target.classList.add("convert-select");
+      convertTextDiv.children[0]?.classList.remove("convert-select");
+      unitGlobal = "C";
+      break;
+  }
+  initialize();
+});
 
 function updateEleText(id: string, value: string | number) {
   if (id === null) return;
@@ -73,8 +115,8 @@ function updateTodaySection(data: weatherType | undefined) {
   // Feels like
   const feelsCard = document.getElementById(domTodayInfo.feels);
   const feelsText = document.createElement("p");
-  feelsText.textContent = String(data.days[0]!.feelslike + "F");
-  feelsCard!.append(feelsText);
+  feelsText.textContent = String(data.days[0]!.feelslike + unitGlobal);
+  feelsCard!.replaceChildren("Feels like", feelsText);
 
   // Wind
   const windCard = document.getElementById(domTodayInfo.wind);
@@ -87,26 +129,29 @@ function updateTodaySection(data: weatherType | undefined) {
   const windSpeedText = document.createElement("p");
   const windSpeedValue = data.currentConditions.windspeed;
   windSpeedText.textContent = `${windSpeedValue} ${unitWind}`;
-  windImg.src = windSpeedValue <= 25 ? normalArrow : doubleArrow;
-  windCard!.append(windDirText, windImg, windSpeedText);
+  if (mainConnection.unit === "us")
+    windImg.src = windSpeedValue <= 25 ? normalArrow : doubleArrow;
+  if (mainConnection.unit === "metric")
+    windImg.src = windSpeedValue <= 39 ? normalArrow : doubleArrow;
+  windCard!.replaceChildren("Wind", windDirText, windImg, windSpeedText);
 
   // Humidity
   const humidityCard = document.getElementById(domTodayInfo.humidity);
   const humidityText = document.createElement("p");
   humidityText.textContent = String(data.currentConditions.humidity + "%");
-  humidityCard!.append(humidityText);
+  humidityCard!.replaceChildren("Humidity", humidityText);
 
   // UV
   const uvCard = document.getElementById(domTodayInfo.uv);
   const uvText = document.createElement("p");
   uvText.textContent = String(data.currentConditions.uvindex);
-  uvCard!.append(uvText);
+  uvCard!.replaceChildren("UV Index", uvText);
 
   // AQI
   const airCard = document.getElementById(domTodayInfo.air);
   const airText = document.createElement("p");
   airText.textContent = String(data.currentConditions.aqius);
-  airCard!.append(airText);
+  airCard!.replaceChildren("Air Quality (AQI)", airText);
 }
 
 function getWindDir(angle: number) {
@@ -159,6 +204,7 @@ function createHourCards(
 ) {
   if (!hours || !wrapper) return;
   // console.log("Hours: ", hours);
+  wrapper.replaceChildren("");
   hours.forEach((hour) => {
     const card = document.createElement("article");
     card.classList.add("card", "hour");
@@ -210,6 +256,7 @@ function createForecastCards(
   days: (dayType | undefined)[],
   wrapper: HTMLElement | null,
 ) {
+  wrapper?.replaceChildren("");
   if (!days || !wrapper) return;
   days.forEach((day) => {
     if (!day) return;
@@ -252,6 +299,7 @@ function insertPrecip(
   wrapper.append(precip);
 
   const precipArr = apiObj.preciptype;
+  if (!precipArr) return;
   precipArr.forEach((type) => {
     const icon = document.createElement("img");
     icon.src = type === "rain" || type === "freezingrain" ? rain : snow;
@@ -277,7 +325,6 @@ function initializeAllSections(data: weatherType | undefined) {
   updateHourSection(data);
   updateForecast(data);
 }
-initializeAllSections(await mainConnection.getData(unitGlobal));
 
 // Object.entries(domCurrent).forEach((item) => {
 //   console.log(item);

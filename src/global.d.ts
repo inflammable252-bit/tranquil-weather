@@ -8,6 +8,7 @@ declare module "*.png" {
 interface weatherType {
   resolvedAddress: string | number;
   currentConditions: {
+    datetime: "string";
     temp: number;
     conditions: string;
     winddir: number;

@@ -12,21 +12,39 @@ location = "las vegas";
 const mainConnection = new Connection(location);
 let unitGlobal = "F";
 let unitWind: string;
+let retrievalTime: string | undefined;
+let queryMS: number;
 
 initialize();
 
 async function initialize() {
+  const start = performance.now();
   mainConnection.setLoc(location);
   mainConnection.setUnit(unitGlobal);
   unitWind = mainConnection.unit === "metric" ? "km/h" : "mph";
-  initializeAllSections(await mainConnection.getData());
+  const data = await mainConnection.getData();
+  retrievalTime = data?.currentConditions.datetime;
+  const end = performance.now();
+  queryMS = end - start;
+  initializeAllSections(data);
 }
 
+// Footer
+function buildQueryText(): string {
+  const text = `Retrieved: ${retrievalTime}, ${queryMS} ms.`;
+  return text;
+}
+function updateFooter() {
+  const queryInfo = document.getElementById(
+    "updated-info",
+  ) as HTMLParagraphElement;
+  if (!queryInfo) return;
+  queryInfo.textContent = buildQueryText();
+}
+
+// Search
 const searchForm = document.getElementById("search-form") as HTMLFormElement;
 const searchbar = document.getElementById("searchbar") as HTMLInputElement;
-const searchButton = document.getElementById(
-  "search-button",
-) as HTMLButtonElement;
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();
   location = searchbar.value;
@@ -34,6 +52,25 @@ searchForm.addEventListener("submit", (e) => {
   searchbar.value = "";
 });
 
+// Sidebar
+const sidebarUl = document.getElementById("location-list") as HTMLUListElement;
+const sidebarButton = document.getElementById(
+  "location-add",
+) as HTMLButtonElement;
+
+sidebarButton.addEventListener("click", () => {
+  addLoc(location);
+});
+
+function addLoc(loc: string | number) {
+  const item = document.createElement("li");
+  item.classList.add("location-item");
+  item.textContent = String(loc);
+  if (sidebarUl.lastChild?.textContent == loc) return;
+  sidebarUl.append(item);
+}
+
+// Unit
 const convertTextDiv = document.getElementById("convert-wrapper");
 convertTextDiv?.addEventListener("click", (e) => {
   const target = e.target as HTMLElement;
@@ -55,6 +92,7 @@ convertTextDiv?.addEventListener("click", (e) => {
   initialize();
 });
 
+// Current
 function updateEleText(id: string, value: string | number) {
   if (id === null) return;
   const element = document.getElementById(id);
@@ -80,8 +118,9 @@ function updateCurrentSection(data: weatherType | undefined) {
         address.push(word[0]?.toUpperCase() + word.slice(1).toLowerCase());
       }
     });
+    location = address.join(" ");
   }
-  updateEleText(domCurrent.loc, address.join(" "));
+  updateEleText(domCurrent.loc, location);
 
   updateEleText(
     domCurrent.high,
@@ -92,6 +131,7 @@ function updateCurrentSection(data: weatherType | undefined) {
   updateEleText(domCurrent.condition, data.days[0]!.description);
 }
 
+// Alert
 function updateAlertSection(data: weatherType | undefined) {
   const alertEle = document.getElementById("alert");
   data!.alerts.forEach((alert) => {
@@ -160,6 +200,7 @@ function getWindDir(angle: number) {
   return windDir;
 }
 
+// Hour
 function updateHourSection(data: weatherType) {
   if (!data) return;
   const hourWrapper = document.getElementById("hourly-wrapper");
@@ -236,6 +277,7 @@ function createHourCards(
   });
 }
 
+// Forecast
 function updateForecast(data: weatherType | undefined) {
   if (!data) return;
   const forecastWrapper = document.getElementById("forecast-wrapper");
@@ -317,6 +359,7 @@ function getHour(timeString: string) {
   return `${hourString} ${hourAMorPM}`;
 }
 
+// Init
 function initializeAllSections(data: weatherType | undefined) {
   if (!data) return;
   updateCurrentSection(data);
@@ -324,6 +367,7 @@ function initializeAllSections(data: weatherType | undefined) {
   updateAlertSection(data);
   updateHourSection(data);
   updateForecast(data);
+  updateFooter();
 }
 
 // Object.entries(domCurrent).forEach((item) => {

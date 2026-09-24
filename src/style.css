@@ -36,7 +36,7 @@ main {
   height: 100%;
   position: relative;
   display: grid;
-  grid-template-rows: 1fr auto 1fr;
+  grid-template-rows: auto auto 1fr;
 }
 aside#location-sidebar {
   display: none;

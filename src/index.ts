@@ -31,7 +31,7 @@ async function initialize() {
 
 // Footer
 function buildQueryText(): string {
-  const text = `Retrieved: ${retrievalTime}, ${queryMS} ms.`;
+  const text = `Retrieved: ${retrievalTime}, ${queryMS} ms`;
   return text;
 }
 function updateFooter() {
@@ -68,6 +68,17 @@ function addLoc(loc: string | number) {
   item.textContent = String(loc);
   if (sidebarUl.lastChild?.textContent == loc) return;
   sidebarUl.append(item);
+  item.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    const targetLocation = target.textContent;
+    if (!target || toUpper(targetLocation) == toUpper(location)) return;
+    goToLoc(targetLocation);
+  });
+}
+
+function goToLoc(tarLocation: string) {
+  location = tarLocation;
+  initialize();
 }
 
 // Unit
@@ -115,7 +126,7 @@ function updateCurrentSection(data: weatherType | undefined) {
     const addressArr = data.resolvedAddress.split(" ");
     addressArr.forEach((word: string | number) => {
       if (typeof word == "string") {
-        address.push(word[0]?.toUpperCase() + word.slice(1).toLowerCase());
+        address.push(toUpper(word));
       }
     });
     location = address.join(" ");
@@ -129,6 +140,11 @@ function updateCurrentSection(data: weatherType | undefined) {
   updateEleText(domCurrent.low, `Low: ${data.days[0]!.tempmin} ${unitGlobal}`);
 
   updateEleText(domCurrent.condition, data.days[0]!.description);
+}
+
+function toUpper(word) {
+  const fixedWord = word[0].toUpperCase() + word.slice(1).toLowerCase();
+  return fixedWord;
 }
 
 // Alert

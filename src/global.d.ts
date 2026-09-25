@@ -5,8 +5,13 @@ declare module "*.png" {
   export default value;
 }
 
+declare module "*.svg" {
+  const value: string;
+  export default value;
+}
+
 interface weatherType {
-  resolvedAddress: string | number;
+  resolvedAddress: string;
   currentConditions: {
     datetime: "string";
     temp: number;

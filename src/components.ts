@@ -41,7 +41,7 @@ class Connection {
   protected async request() {
     try {
       const response = await fetch(
-        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${this.location}?unitGroup=${this.unit}&elements=add:aqius&include=days,hours,current,alerts,events&key=${this.#getKey()}&contentType=json`,
+        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${this.location}?unitGroup=${this.unit}&iconSet=icons2&elements=add:aqius&include=days,hours,current,alerts,events&key=${this.#getKey()}&contentType=json`,
       );
       const data = await response.json();
       this.weatherData = data;

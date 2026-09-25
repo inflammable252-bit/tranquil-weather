@@ -7,7 +7,7 @@ import doubleArrow from "./images/caret-double-up-bold-svgrepo-com.png";
 import rain from "./images/water-svgrepo-com.png";
 import snow from "./images/snow-svgrepo-com.png";
 
-let location: string | number;
+let location: string;
 location = "las vegas";
 const mainConnection = new Connection(location);
 let unitGlobal = "F";
@@ -31,7 +31,9 @@ async function initialize() {
 
 // Footer
 function buildQueryText(): string {
-  const text = `Retrieved: ${retrievalTime}, ${queryMS} ms`;
+  console.log(queryMS);
+  const roundedQuery = parseFloat(queryMS.toFixed(3));
+  const text = `Data: ${retrievalTime}, Retrieved: ${roundedQuery} ms`;
   return text;
 }
 function updateFooter() {
@@ -41,6 +43,18 @@ function updateFooter() {
   if (!queryInfo) return;
   queryInfo.textContent = buildQueryText();
 }
+// Mode
+const modeSelect = document.getElementById("mode-select") as HTMLSelectElement;
+modeSelect?.addEventListener("change", () => {
+  changeMode(modeSelect.value);
+});
+
+function changeMode(mode: string) {
+  const root = document.documentElement;
+  root.style.setProperty("--current-bg", "var(--bg-" + mode);
+  root.style.setProperty("--current-bg-color", "var(--bg-" + mode + "-color)");
+  root.style.setProperty("--current-font", "var(--font-" + mode + ")");
+}
 
 // Search
 const searchForm = document.getElementById("search-form") as HTMLFormElement;
@@ -48,6 +62,7 @@ const searchbar = document.getElementById("searchbar") as HTMLInputElement;
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();
   location = searchbar.value;
+
   initialize();
   searchbar.value = "";
 });
@@ -62,7 +77,7 @@ sidebarButton.addEventListener("click", () => {
   addLoc(location);
 });
 
-function addLoc(loc: string | number) {
+function addLoc(loc: string) {
   const item = document.createElement("li");
   item.classList.add("location-item");
   item.textContent = String(loc);
@@ -121,13 +136,20 @@ function updateCurrentSection(data: weatherType | undefined) {
     `${data.currentConditions.temp} ${unitGlobal}`,
   );
 
-  const address: string[] = [];
-  if (typeof data.resolvedAddress === "string") {
-    const addressArr = data.resolvedAddress.split(" ");
-    addressArr.forEach((word: string | number) => {
-      if (typeof word == "string") {
-        address.push(toUpper(word));
-      }
+  const dataAddress = data.resolvedAddress;
+  if (dataAddress.includes(",")) {
+    location = dataAddress;
+    // addressArr.forEach((word: string | number) => {
+    //   if (typeof word == "string") {
+    //     address.push(toUpper(word));
+    //   }
+    // });
+    // location = address.join(" ");
+  } else {
+    const address: string[] = [];
+    const addressArr = dataAddress.split(" ");
+    addressArr.forEach((word: string | undefined) => {
+      address.push(toUpper(word));
     });
     location = address.join(" ");
   }
@@ -142,14 +164,16 @@ function updateCurrentSection(data: weatherType | undefined) {
   updateEleText(domCurrent.condition, data.days[0]!.description);
 }
 
-function toUpper(word) {
-  const fixedWord = word[0].toUpperCase() + word.slice(1).toLowerCase();
+function toUpper(word: string | undefined) {
+  if (typeof word !== "string") return;
+  const fixedWord = word[0]!.toUpperCase() + word.slice(1).toLowerCase();
   return fixedWord;
 }
 
 // Alert
 function updateAlertSection(data: weatherType | undefined) {
   const alertEle = document.getElementById("alert");
+  if (data!.alerts.length === 0) alertEle?.replaceChildren("");
   data!.alerts.forEach((alert) => {
     const alertDrawer = document.createElement("details");
     alertDrawer.classList.add("alert-item");
@@ -160,8 +184,8 @@ function updateAlertSection(data: weatherType | undefined) {
     const alertBody = document.createElement("p");
     alertBody.textContent = alert.description;
 
-    alertDrawer.append(alertHead, alertBody);
-    alertEle?.append(alertDrawer);
+    alertDrawer.replaceChildren(alertHead, alertBody);
+    alertEle?.replaceChildren(alertDrawer);
   });
 }
 
@@ -344,6 +368,8 @@ function createForecastCards(
     wrapper.append(card);
   });
 }
+
+// note: builder fn for expanded info section on click
 
 function insertPrecip(
   classPrefix: string,

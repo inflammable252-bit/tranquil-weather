@@ -30,8 +30,10 @@ select {
 }
 
 body {
-  --bg-size: 100%;
-  --bg-multiplier: 2;
+  --bg-height-div: 2;
+  --bg-width: calc(2304px / (var(--bg-height-div)));
+  --bg-height: calc(1296px / (var(--bg-height-div)));
+
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -39,7 +41,7 @@ body {
   background-color: var(--current-bg-color);
 
   background-image: var(--current-bg);
-  background-size: calc(var(--bg-size) * 2) auto;
+  background-size: var(--bg-width) var(--bg-height);
   background-position-y: bottom;
   background-repeat: repeat-x;
   animation: bg-drift 2s linear infinite;
@@ -147,7 +149,7 @@ img.precip-icon {
 
 @media (width >= 768px) {
   body {
-    --bg-size: 75%;
+    --bg-height-div: 2.25;
     --bg-multiplier: 4;
     --sidebar: 0fr;
 
@@ -184,8 +186,7 @@ img.precip-icon {
 @media (width >= 1024px) {
   body {
     --sidebar: 0.05fr;
-    --bg-size: 60%;
-    --bg-multiplier: 4;
+    --bg-height-div: 3;
     /* animation: bg-drift-2 2s linear infinite; */
   }
 }
@@ -193,15 +194,20 @@ img.precip-icon {
 @media (width >= 1200px) {
   body {
     --sidebar: 0.15fr;
-    --bg-size: 60%;
+    --bg-height-div: 3.25;
   }
 }
 @media (width >= 1400px) {
   body {
-    --bg-size: 40%;
+    --bg-height-div: 3;
   }
 }
 
+@media (height >= 900px) {
+  body {
+    --bg-height-div: 1.5;
+  }
+}
 /* Animations */
 @keyframes bg-drift {
   from {
@@ -209,16 +215,6 @@ img.precip-icon {
   }
 
   to {
-    background-position-x: calc(var(--bg-size) * var(--bg-multiplier));
-  }
-}
-
-@keyframes bg-drift-2 {
-  from {
-    background-position-x: left;
-  }
-  to {
-    background-position-x: 200%;
-    /* background-position-x: calc(100% * var(--bg-multiplier)); */
+    background-position-x: var(--bg-width);
   }
 }

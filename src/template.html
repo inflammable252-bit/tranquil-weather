@@ -1,65 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tranquil Weather</title>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>Tranquil Weather</h1>
-        <form id="search-form">
-            <input type="text" id="searchbar"/>
-            <button type="submit" id="search-button">Find</button>
-        </form>
+      <h1>Tranquil Weather</h1>
+      <form id="search-form">
+        <input type="text" id="searchbar" />
+        <button type="submit" id="search-button">Find</button>
+      </form>
     </header>
+    <aside id="location-sidebar">
+      <ul id="location-list"></ul>
+      <button type="button" id="location-add">Add location</button>
+    </aside>
     <main>
-        <aside id="location-sidebar">
-            <ul id="location-list">
-            </ul>
-            <button type="button" id="location-add">Add location</button>
-        </aside>
-        <img id="sidebar-button" src="./images/list-ul-svgrepo-com.svg" alt="Click to see list of saved locations.">
-        <article id="current-weather-wrapper">
-            <h2 id="current-temp">Temperature</h1>
-            <h3 id="current-location">Location</h3>
-            <p id="current-high">High</p>
-            <p id="current-low">Low</p>
-            <p id="current-condition">Current condition</p>
-            <div id="convert-wrapper">
-                <p id="F" class="convert-select">F</p>
-                <p>|</p>
-                <p id="C">C</p>
-            </div>
-        </article>
-        <section id="today">
-            <div id="alert"></div>
-            <p>Today</p>
-            <div id="info-wrapper">
-                <article class="card" id="feels-like">Feels like</article>
-                <article class="card" id="wind">Wind</article>
-                <article class="card" id="humidity">Humidity</article>
-                <article class="card" id="uv-index">UV Index</article>
-                <article class="card" id="air-quality">Air Quality (AQI)</article>
-            </div>
-            <div id="hourly-wrapper">
-            </div>
-        </section>
-        <section id="forecast">
-            <p>Daily Forecast</p>
-            <div id="forecast-wrapper">
-                <!-- <article class="card forecast">day 1</article>
+      <img
+        id="sidebar-button"
+        src="./images/list-ul-svgrepo-com.svg"
+        alt="Click to see list of saved locations."
+      />
+      <article id="current-weather-wrapper">
+        <p id="current-temp">Temperature</p>
+        <p id="current-location">Location</p>
+        <p id="current-high">High</p>
+        <p id="current-low">Low</p>
+        <p id="current-condition">Current condition</p>
+        <div id="convert-wrapper">
+          <p id="F" class="convert-select">F</p>
+          <p>|</p>
+          <p id="C">C</p>
+        </div>
+      </article>
+      <section id="today">
+        <div id="alert"></div>
+        <h2>Today</h2>
+        <div id="info-wrapper">
+          <article class="card" id="feels-like">Feels like</article>
+          <article class="card" id="wind">Wind</article>
+          <article class="card" id="humidity">Humidity</article>
+          <article class="card" id="uv-index">UV Index</article>
+          <article class="card" id="air-quality">Air Quality (AQI)</article>
+        </div>
+        <div id="hourly-wrapper"></div>
+      </section>
+      <section id="forecast">
+        <h2>Daily Forecast</h2>
+        <div id="forecast-wrapper">
+          <!-- <article class="card forecast">day 1</article>
                 <article class="card forecast">day 2</article>
                 <article class="card forecast">day 3</article> -->
-            </div>
-        </section>
+        </div>
+      </section>
     </main>
     <footer>
-        <p id="updated-info"></p>
-        <select name="mode" id="mode-select">
-            <option value="day">Day</option>
-            <option value="night">Night</option>
-        </select>
+      <p id="updated-info"></p>
+      <select name="mode" id="mode-select">
+        <option value="day">Day</option>
+        <option value="night">Night</option>
+      </select>
     </footer>
-</body>
+  </body>
 </html>

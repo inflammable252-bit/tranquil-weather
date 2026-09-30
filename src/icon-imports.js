@@ -14,6 +14,6 @@ export { default as partlyCloudyDay } from "./images/icons/cloud-sun-2-svgrepo-c
 
 export { default as partlyCloudyNight } from "./images/icons/cloud-sun-svgrepo-com.svg";
 
-export { default as day } from "./images/icons/sun-svg-repo-com.svg";
+export { default as day } from "./images/icons/sun-svgrepo-com.svg";
 
 export { default as night } from "./images/icons/moon-svgrepo-com.svg";

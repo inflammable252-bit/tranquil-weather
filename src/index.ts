@@ -4,8 +4,20 @@ import "./reset.css";
 import { domCurrent, domTodayInfo, Connection } from "./components.js";
 import normalArrow from "./images/caret-up-bold-svgrepo-com.png";
 import doubleArrow from "./images/caret-double-up-bold-svgrepo-com.png";
-import rain from "./images/water-svgrepo-com.png";
-import snow from "./images/snow-svgrepo-com.png";
+import precipRain from "./images/drop-svgrepo-com.svg";
+import precipSnow from "./images/snow-svgrepo-com.svg";
+import {
+  snow,
+  thunder,
+  rain,
+  fog,
+  wind,
+  cloudy,
+  partlyCloudyDay,
+  partlyCloudyNight,
+  day,
+  night,
+} from "./icon-imports.js";
 
 let location: string;
 location = "las vegas";
@@ -31,7 +43,6 @@ async function initialize() {
 
 // Footer
 function buildQueryText(): string {
-  console.log(queryMS);
   const roundedQuery = parseFloat(queryMS.toFixed(3));
   const text = `Data: ${retrievalTime}, Retrieved: ${roundedQuery} ms`;
   return text;
@@ -146,7 +157,7 @@ function updateCurrentSection(data: weatherType | undefined) {
     // });
     // location = address.join(" ");
   } else {
-    const address: string[] = [];
+    const address: (string | undefined)[] = [];
     const addressArr = dataAddress.split(" ");
     addressArr.forEach((word: string | undefined) => {
       address.push(toUpper(word));
@@ -205,7 +216,6 @@ function updateTodaySection(data: weatherType | undefined) {
   const windValue = data.currentConditions.winddir;
   windImg.style.transform = String(`rotate(${windValue}deg)`);
   windDirText.textContent = String(getWindDir(windValue));
-  windCard!.append(windDirText);
   const windSpeedText = document.createElement("p");
   const windSpeedValue = data.currentConditions.windspeed;
   windSpeedText.textContent = `${windSpeedValue} ${unitWind}`;
@@ -293,10 +303,15 @@ function createHourCards(
     const hourTextValue = hour!.datetime;
     hourText.textContent = getHour(hourTextValue);
 
+    const icon = document.createElement("img");
+    insertIcon(hour, icon);
+
+    // Hourly temp
     const hourTemp = document.createElement("p");
     hourTemp.classList.add("hour-temp");
     hourTemp.textContent = `${hour!.temp} ${unitGlobal}`;
 
+    // Hourly wind
     const hourWindDiv = document.createElement("div");
     hourWindDiv.classList.add("hour-wind-wrapper");
     const hourWind = document.createElement("p");
@@ -307,12 +322,13 @@ function createHourCards(
     hourWindDiv.append(hourWind, hourWindArrow);
     hourWindArrow.style.transform = String(`rotate(${hour!.winddir}deg)`);
 
+    // Hourly precipitation
     const hourPrecipWrapper = document.createElement("div");
     hourPrecipWrapper.classList.add("hour-precip-wrapper");
 
     insertPrecip("hour", hour, hourPrecipWrapper);
 
-    card.append(hourText, hourTemp, hourWindDiv, hourPrecipWrapper);
+    card.append(hourText, icon, hourTemp, hourWindDiv, hourPrecipWrapper);
     wrapper.append(card);
   });
 }
@@ -328,7 +344,7 @@ function updateForecast(data: weatherType | undefined) {
 
 function getWeek(days: dayType[]) {
   const next7Days = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 14; i++) {
     next7Days.push(days[i]);
   }
   return next7Days;
@@ -351,6 +367,9 @@ function createForecastCards(
     const dateDay = day.datetime.slice(8);
     date.textContent = `${dateMonth}/${dateDay}`;
 
+    const icon = document.createElement("img");
+    insertIcon(day, icon);
+
     const forecastTemp = document.createElement("p");
     forecastTemp.classList.add("forecast-temp");
     forecastTemp.textContent = `${day.temp} ${unitGlobal}`;
@@ -364,12 +383,66 @@ function createForecastCards(
 
     insertPrecip("forecast", day, forecastPrecipWrapper);
 
-    card.append(date, forecastTemp, forecastPrecipWrapper);
+    card.append(date, icon, forecastTemp, forecastPrecipWrapper);
     wrapper.append(card);
   });
 }
 
 // note: builder fn for expanded info section on click
+
+function insertIcon(
+  dayOrHour: (dayType | hourType) | undefined,
+  ele: HTMLImageElement,
+) {
+  if (!dayOrHour) return;
+  const iconData = dayOrHour.icon;
+  ele.src = getIcon(iconData)!;
+  ele.title = iconData;
+  ele.classList.add("weather-icons");
+}
+
+function getIcon(condition: string) {
+  let icon;
+  switch (condition) {
+    case "snow":
+    case "snow-showers-day":
+    case "snow-showers-night":
+      icon = snow;
+      break;
+    case "thunder-rain":
+    case "thunder-showers-day":
+    case "thunder-showers-night":
+      icon = thunder;
+      break;
+    case "rain":
+    case "showers-day":
+    case "showers-night":
+      icon = rain;
+      break;
+    case "fog":
+      icon = fog;
+      break;
+    case "wind":
+      icon = wind;
+      break;
+    case "cloudy":
+      icon = cloudy;
+      break;
+    case "partly-cloudy-day":
+      icon = partlyCloudyDay;
+      break;
+    case "partly-cloudy-night":
+      icon = partlyCloudyNight;
+      break;
+    case "clear-day":
+      icon = day;
+      break;
+    case "clear-night":
+      icon = night;
+      break;
+  }
+  return icon;
+}
 
 function insertPrecip(
   classPrefix: string,
@@ -380,15 +453,26 @@ function insertPrecip(
   const precip = document.createElement("p");
   precip.classList.add(`${classPrefix}-precip`);
   precip.textContent = String(apiObj.precipprob) + "% ";
+
   wrapper.append(precip);
 
+  const rainTypes = ["rain", "freezingrain"];
+  const snowTypes = ["snow", "freezingrain", "sleet"];
   const precipArr = apiObj.preciptype;
+  const cardPrecipIcons = [];
   if (!precipArr) return;
-  precipArr.forEach((type) => {
-    const icon = document.createElement("img");
-    icon.src = type === "rain" || type === "freezingrain" ? rain : snow;
-    icon.classList.add("forecast-precip-icon", "precip-icon");
-    wrapper.append(icon);
+
+  if (precipArr.some((item) => rainTypes.includes(item))) {
+    cardPrecipIcons.push(precipRain);
+  }
+  if (precipArr.some((item) => snowTypes.includes(item))) {
+    cardPrecipIcons.push(precipSnow);
+  }
+  cardPrecipIcons.forEach((item) => {
+    const img = document.createElement("img");
+    img.src = item;
+    img.classList.add("precip-icon");
+    wrapper.append(img);
   });
 }
 

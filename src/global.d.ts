@@ -52,6 +52,7 @@ interface hourType {
   precip: number;
   precipprob: number;
   preciptype: string[];
+  icon: string;
 }
 
 interface alertsType {

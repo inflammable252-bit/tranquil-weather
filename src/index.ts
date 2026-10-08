@@ -26,6 +26,7 @@ let unitGlobal = "F";
 let unitWind: string;
 let retrievalTime: string | undefined;
 let queryMS: number;
+let currentMode = "night";
 
 initialize();
 
@@ -57,15 +58,32 @@ function updateFooter() {
 // Mode
 const modeSelect = document.getElementById("mode-select") as HTMLSelectElement;
 modeSelect?.addEventListener("change", () => {
-  changeMode(modeSelect.value);
+  currentMode = modeSelect.value;
+  changeMode(currentMode);
 });
 
 function changeMode(mode: string) {
   const root = document.documentElement;
   root.style.setProperty("--current-bg", "var(--bg-" + mode);
   root.style.setProperty("--current-bg-color", "var(--bg-" + mode + "-color)");
-  root.style.setProperty("--current-font", "var(--font-" + mode + ")");
+  root.style.setProperty("--current-ui-bg", "var(--ui-bg-" + mode);
+  // root.style.setProperty("--current-font", "var(--font-" + mode + ")");
 }
+
+function setToggle(mode: string) {
+  let selectIndex = 0;
+  switch (mode) {
+    case "day":
+      selectIndex = 0;
+      break;
+    case "night":
+      selectIndex = 1;
+      break;
+  }
+  modeSelect[selectIndex]!.setAttribute("selected", "");
+}
+
+setToggle(currentMode);
 
 // Search
 const searchForm = document.getElementById("search-form") as HTMLFormElement;
@@ -223,7 +241,9 @@ function updateTodaySection(data: weatherType | undefined) {
     windImg.src = windSpeedValue <= 25 ? normalArrow : doubleArrow;
   if (mainConnection.unit === "metric")
     windImg.src = windSpeedValue <= 39 ? normalArrow : doubleArrow;
-  windCard!.replaceChildren("Wind", windDirText, windImg, windSpeedText);
+  const windTitleText = document.createElement("p");
+  windTitleText.textContent = "Wind";
+  windCard!.replaceChildren(windTitleText, windDirText, windImg, windSpeedText);
 
   // Humidity
   const humidityCard = document.getElementById(domTodayInfo.humidity);
@@ -241,7 +261,10 @@ function updateTodaySection(data: weatherType | undefined) {
   const airCard = document.getElementById(domTodayInfo.air);
   const airText = document.createElement("p");
   airText.textContent = String(data.currentConditions.aqius);
-  airCard!.replaceChildren("Air Quality (AQI)", airText);
+  const aqiTextFull = "Air Quality";
+  const aqiText = document.createElement("p");
+  aqiText.textContent = "(AQI)";
+  airCard!.replaceChildren(aqiTextFull, aqiText, airText);
 }
 
 function getWindDir(angle: number) {
@@ -343,11 +366,11 @@ function updateForecast(data: weatherType | undefined) {
 }
 
 function getWeek(days: dayType[]) {
-  const next7Days = [];
+  const nex14Days = [];
   for (let i = 0; i < 14; i++) {
-    next7Days.push(days[i]);
+    nex14Days.push(days[i]);
   }
-  return next7Days;
+  return nex14Days;
 }
 
 function createForecastCards(

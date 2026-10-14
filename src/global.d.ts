@@ -30,6 +30,7 @@ interface weatherType {
 }
 
 interface dayType {
+  conditions: string;
   description: string;
   windspeed: number;
   datetime: string;
@@ -46,6 +47,7 @@ interface dayType {
 
 interface hourType {
   datetime: "string";
+  conditions: string;
   temp: number;
   winddir: number;
   windspeed: number;

@@ -20,7 +20,7 @@ import {
 } from "./icon-imports.js";
 
 let location: string;
-location = "las vegas";
+location = "waikiki";
 const mainConnection = new Connection(location);
 let unitGlobal = "F";
 let unitWind: string;
@@ -35,11 +35,16 @@ async function initialize() {
   mainConnection.setLoc(location);
   mainConnection.setUnit(unitGlobal);
   unitWind = mainConnection.unit === "metric" ? "km/h" : "mph";
-  const data = await mainConnection.getData();
-  retrievalTime = data?.currentConditions.datetime;
-  const end = performance.now();
-  queryMS = end - start;
-  initializeAllSections(data);
+  try {
+    const data = await mainConnection.getData();
+    retrievalTime = data?.currentConditions.datetime;
+    const end = performance.now();
+    queryMS = end - start;
+    initializeAllSections(data);
+  } catch (error) {
+    console.log("Unable to retrieve data: " + error);
+    return;
+  }
 }
 
 // Footer
@@ -67,6 +72,10 @@ function changeMode(mode: string) {
   root.style.setProperty("--current-bg", "var(--bg-" + mode);
   root.style.setProperty("--current-bg-color", "var(--bg-" + mode + "-color)");
   root.style.setProperty("--current-ui-bg", "var(--ui-bg-" + mode);
+  root.style.setProperty(
+    "--current-footer-color",
+    "var(--footer-color-" + mode,
+  );
   // root.style.setProperty("--current-font", "var(--font-" + mode + ")");
 }
 
@@ -202,7 +211,10 @@ function toUpper(word: string | undefined) {
 // Alert
 function updateAlertSection(data: weatherType | undefined) {
   const alertEle = document.getElementById("alert");
-  if (data!.alerts.length === 0) alertEle?.replaceChildren("");
+
+  alertEle?.replaceChildren("");
+  if (data!.alerts.length === 0) return;
+
   data!.alerts.forEach((alert) => {
     const alertDrawer = document.createElement("details");
     alertDrawer.classList.add("alert-item");
@@ -213,8 +225,8 @@ function updateAlertSection(data: weatherType | undefined) {
     const alertBody = document.createElement("p");
     alertBody.textContent = alert.description;
 
-    alertDrawer.replaceChildren(alertHead, alertBody);
-    alertEle?.replaceChildren(alertDrawer);
+    alertDrawer.append(alertHead, alertBody);
+    alertEle?.append(alertDrawer);
   });
 }
 
@@ -274,9 +286,11 @@ function getWindDir(angle: number) {
 }
 
 // Hour
+const hourWrapper = document.getElementById("hourly-wrapper");
+addScroll(hourWrapper);
+
 function updateHourSection(data: weatherType) {
   if (!data) return;
-  const hourWrapper = document.getElementById("hourly-wrapper");
   const hoursArr = getNext12Hours(data.days);
   console.log("hours array: ", hoursArr);
   createHourCards(hoursArr, hourWrapper);
@@ -351,15 +365,38 @@ function createHourCards(
 
     insertPrecip("hour", hour, hourPrecipWrapper);
 
-    card.append(hourText, icon, hourTemp, hourWindDiv, hourPrecipWrapper);
+    // Additional Info
+    const conditions = getConditions("hour", hour);
+
+    // Build
+    card.append(
+      hourText,
+      icon,
+      hourTemp,
+      conditions,
+      hourWindDiv,
+      hourPrecipWrapper,
+    );
     wrapper.append(card);
   });
 }
 
+function getConditions(
+  classPrefix: string,
+  apiObj: hourType | dayType | undefined,
+): HTMLElement {
+  const p = document.createElement("p");
+  p.classList.add(classPrefix + "-condition");
+  if (apiObj) p.textContent = apiObj.conditions;
+  return p;
+}
+
 // Forecast
+const forecastWrapper = document.getElementById("forecast-wrapper");
+addScroll(forecastWrapper);
+
 function updateForecast(data: weatherType | undefined) {
   if (!data) return;
-  const forecastWrapper = document.getElementById("forecast-wrapper");
   const daysArr = getWeek(data.days);
   console.log("days array: ", daysArr);
   createForecastCards(daysArr, forecastWrapper);
@@ -384,29 +421,37 @@ function createForecastCards(
     const card = document.createElement("article");
     card.classList.add("card", "forecast");
 
+    // Date
     const date = document.createElement("p");
     date.classList.add("forecast-date");
     const dateMonth = parseInt(day.datetime.slice(5, 7));
     const dateDay = day.datetime.slice(8);
     date.textContent = `${dateMonth}/${dateDay}`;
 
+    // Icon
     const icon = document.createElement("img");
     insertIcon(day, icon);
 
+    // Temp
     const forecastTemp = document.createElement("p");
     forecastTemp.classList.add("forecast-temp");
     forecastTemp.textContent = `${day.temp} ${unitGlobal}`;
 
+    // Condition
+    const conditions = getConditions("forecast", day);
+
+    // Wind
     const forecastWind = document.createElement("p");
     forecastWind.classList.add("forecast-wind");
     forecastWind.textContent = `${day.windspeed} ${unitWind}`;
 
+    // Precip
     const forecastPrecipWrapper = document.createElement("div");
     forecastPrecipWrapper.classList.add("forecast-precip-wrapper");
 
     insertPrecip("forecast", day, forecastPrecipWrapper);
 
-    card.append(date, icon, forecastTemp, forecastPrecipWrapper);
+    card.append(date, icon, forecastTemp, conditions, forecastPrecipWrapper);
     wrapper.append(card);
   });
 }
@@ -479,24 +524,21 @@ function insertPrecip(
 
   wrapper.append(precip);
 
-  const rainTypes = ["rain", "freezingrain"];
   const snowTypes = ["snow", "freezingrain", "sleet"];
   const precipArr = apiObj.preciptype;
-  const cardPrecipIcons = [];
-  if (!precipArr) return;
+  const cardPrecipIcons = [precipRain];
 
-  if (precipArr.some((item) => rainTypes.includes(item))) {
-    cardPrecipIcons.push(precipRain);
+  if (precipArr?.some((item) => snowTypes.includes(item))) {
+    cardPrecipIcons.unshift(precipSnow);
   }
-  if (precipArr.some((item) => snowTypes.includes(item))) {
-    cardPrecipIcons.push(precipSnow);
-  }
+
   cardPrecipIcons.forEach((item) => {
     const img = document.createElement("img");
     img.src = item;
     img.classList.add("precip-icon");
-    wrapper.append(img);
+    wrapper.prepend(img);
   });
+  if (!apiObj.precipprob) wrapper.classList.add("no-precip");
 }
 
 function getHour(timeString: string) {
@@ -509,6 +551,13 @@ function getHour(timeString: string) {
 }
 
 // Init
+function addScroll(container: HTMLElement | null) {
+  if (container == null) return;
+  container.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    container.scrollLeft += e.deltaY;
+  });
+}
 function initializeAllSections(data: weatherType | undefined) {
   if (!data) return;
   updateCurrentSection(data);

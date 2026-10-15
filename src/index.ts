@@ -76,7 +76,6 @@ function changeMode(mode: string) {
     "--current-footer-color",
     "var(--footer-color-" + mode,
   );
-  // root.style.setProperty("--current-font", "var(--font-" + mode + ")");
 }
 
 function setToggle(mode: string) {
@@ -105,7 +104,29 @@ searchForm.addEventListener("submit", (e) => {
   searchbar.value = "";
 });
 
+// City/Town and State/Province/Region
+
 // Sidebar
+const sidebarIcon = document.getElementById("sidebar-button");
+const sidebar = document.getElementById("location-sidebar");
+sidebarIcon?.addEventListener("click", (e) => {
+  e.preventDefault();
+  sidebar?.classList.toggle("show");
+  sidebar?.animate(
+    [{ transform: "translateX(-100%)" }, { transform: "translateX(0)" }],
+    150,
+  );
+});
+
+const sidebarHide = document.getElementById("hide-sidebar");
+sidebarHide?.addEventListener("click", (e) => {
+  e.preventDefault();
+  setTimeout(() => {
+    sidebar?.classList.remove("show");
+  }, 150);
+  sidebar?.animate({ transform: "translateX(-100%)" }, 150);
+});
+
 const sidebarUl = document.getElementById("location-list") as HTMLUListElement;
 const sidebarButton = document.getElementById(
   "location-add",

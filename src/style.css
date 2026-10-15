@@ -68,6 +68,7 @@ body {
 
   font-family: var(--p-font);
 
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -107,6 +108,7 @@ header {
     grid-column: 1/-1;
     display: flex;
     align-items: center;
+    gap: clamp(0.2rem, 1vw, 0.5rem);
     width: 100%;
     input {
       width: 70%;
@@ -119,7 +121,6 @@ header {
     }
   }
   select#mode-select {
-    align-items: top;
     justify-self: flex-end;
     option {
       color: #000;
@@ -148,18 +149,98 @@ main {
   padding: 1vw;
 }
 aside#location-sidebar {
-  position: absolute;
-  z-index: 10;
-  max-width: 30ch;
-  top: 10%;
+  --pad: clamp(0.1rem, 2vw, 0.5rem);
+
   display: none;
+  position: absolute;
+  top: 10%;
+  left: 0;
+  z-index: 10;
+  max-width: 25ch;
   min-width: 20ch;
   grid-column: 1/2;
   grid-row: 2/-1;
+
+  flex-direction: column;
+  gap: var(--pad);
+
+  padding: clamp(0.2rem, 1vw, 1rem);
+  margin: 1vw 0;
+  border: 0 solid var(--current-ui-border);
+  border-width: 2px 2px 2px 0;
+  border-radius: 0 6px 6px 0;
+  backdrop-filter: blur(8px);
+  background-color: color-mix(var(--current-bg-color) 60%, #00000048);
+  min-height: 30%;
+
+  button#hide-sidebar {
+    font-size: 0.9rem;
+  }
+  ul {
+    list-style: none;
+    padding-left: 0;
+    font-size: 0.9rem;
+  }
+
+  li.location-item {
+    margin: 4px 2px;
+    padding: 0.1rem 0.2rem;
+    color: var(--current-font);
+    background-color: var(--sub-card-bg);
+    border-radius: 4px;
+    transition: 0.2s ease-in-out;
+    cursor: pointer;
+  }
+  li:hover {
+    transform: scale(1.05);
+  }
+
+  button#hide-sidebar {
+    display: block;
+    position: absolute;
+    right: var(--pad);
+  }
+  button#location-add {
+    display: block;
+    position: relative;
+  }
+}
+
+aside#location-sidebar.show {
+  display: flex;
+}
+aside#location-sidebar + main button#sidebar-button {
+  display: block;
+}
+aside#location-sidebar.show + main button#sidebar-button {
+  display: none;
+}
+
+aside button,
+header button {
+  padding: 0.1rem 0.7rem;
+  font-weight: 600;
+
+  background-color: color-mix(var(--current-bg-color) 80%, #949494);
+  border-radius: 6px;
+  border: 1px solid #fff;
+  color: #fff;
+}
+
+aside button:hover,
+header button:hover {
+  transform: scale(1.05);
+  transition: all 0.15s ease-in-out;
+}
+
+aside button:active,
+header button:active {
+  transform: translateY(2px);
 }
 
 button#sidebar-button {
   position: absolute;
+  z-index: 5;
   margin-top: 1vw;
   background: none;
   padding: 0;
@@ -491,11 +572,8 @@ footer {
   main {
     grid-column: main-left / main-right;
   }
-  button#sidebar-button {
+  aside#location-sidebar + main button#sidebar-button {
     display: none;
-  }
-
-  aside#location-sidebar.show {
   }
 
   aside#location-sidebar {
@@ -503,33 +581,12 @@ footer {
     top: 0;
     display: block;
     grid-row: 2/-2;
-    min-width: fit-content;
-    margin: 1vw 0;
-    border: 0 solid var(--current-ui-border);
-    border-width: 2px 2px 2px 0;
-    border-radius: 0 6px 6px 0;
     max-width: 35ch;
-    height: 50%;
-    backdrop-filter: blur(4px);
     background-color: var(--current-ui-bg);
+    backdrop-filter: blur(4px);
 
-    ul {
-      list-style: none;
-      padding-left: 0;
-      font-size: 0.9rem;
-    }
-
-    li.location-item {
-      margin: 4px;
-      padding: 0.1rem 0.4rem;
-      color: var(--current-font);
-      background-color: var(--sub-card-bg);
-      border-radius: 4px;
-      transition: 0.2s ease-in-out;
-      cursor: pointer;
-    }
-    li:hover {
-      transform: scale(1.05);
+    button#hide-sidebar {
+      display: none;
     }
   }
 }

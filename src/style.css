@@ -7,10 +7,25 @@
   --bg-day-color: #6d84ec;
   --ui-bg-day: color-mix(var(--current-bg-color), #2c2c2c77);
   --footer-color-day: #424242e5;
+  --logo-gradient-day: linear-gradient(
+    -200deg,
+    #d6d6d6,
+    #f2e1c3,
+    #bad2ec,
+    #fff,
+    #bad2ec
+  );
 
   --bg-night: url("./images/bgs/evening.png");
   --bg-night-color: #473ea5;
   --ui-bg-night: color-mix(var(--current-bg-color), #0a0a0a67 60%);
+  --logo-gradient-night: linear-gradient(
+    -25deg,
+    #cca2d2,
+    #eaa3c3,
+    #fdaf9b,
+    #fecea0
+  );
   --footer-color-night: #fff;
 
   --bg-wind-normal: 60s;
@@ -27,6 +42,8 @@
 
   --current-ui-border: #ffffffc0;
   --current-ui-bg: var(--ui-bg-night);
+
+  --current-logo-gradient: var(--logo-gradient-night);
 
   --sub-card-bg: #f3f2f213;
 }
@@ -90,7 +107,7 @@ body {
 header {
   display: grid;
   grid-auto-flow: column;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
   height: fit-content;
   max-width: 100%;
@@ -100,8 +117,13 @@ header {
   border-bottom: 3px solid var(--current-ui-border);
 
   h1 {
+    font-size: clamp(1.6rem, 2.6vw, 2.1rem);
     font-family: var(--h-font);
     letter-spacing: 4px;
+
+    background-image: var(--current-logo-gradient);
+    background-clip: text;
+    color: transparent;
   }
   form#search-form {
     grid-row: 2/3;
@@ -175,14 +197,18 @@ aside#location-sidebar {
 
   button#hide-sidebar {
     font-size: 0.9rem;
+    display: block;
+    position: absolute;
+    right: var(--pad);
   }
   ul {
     list-style: none;
     padding-left: 0;
     font-size: 0.9rem;
   }
-
   li.location-item {
+    display: flex;
+    justify-content: space-between;
     margin: 4px 2px;
     padding: 0.1rem 0.2rem;
     color: var(--current-font);
@@ -194,11 +220,15 @@ aside#location-sidebar {
   li:hover {
     transform: scale(1.05);
   }
-
-  button#hide-sidebar {
-    display: block;
-    position: absolute;
-    right: var(--pad);
+  button.delete-item {
+    align-self: center;
+    font-size: 12px;
+    border-radius: 25%;
+    padding: 0 5px;
+  }
+  button.delete-item:hover {
+    transform: none;
+    background-color: #6b1b1b3f;
   }
   button#location-add {
     display: block;
@@ -269,15 +299,18 @@ article#current-weather-wrapper {
   align-items: center;
   justify-content: center;
   text-align: center;
+  padding-top: max(1rem, 2vw);
   p {
+    font-size: calc(0.7rem + 0.45vw);
     color: #fff;
     font-family: var(--p-font);
-    font-weight: bold;
+    font-weight: 600;
   }
   p#current-temp,
   p#current-location {
     letter-spacing: 1.25px;
-    font-size: 1.5rem;
+    font-size: calc(1rem + 0.45vw);
+    font-weight: bolder;
   }
 }
 div#convert-wrapper {
@@ -345,8 +378,6 @@ section#today {
   max-width: 100%;
   height: min-content;
   div#info-wrapper {
-    /* display: grid;
-    grid-auto-flow: column; */
     display: flex;
     flex-wrap: wrap;
     grid-template-rows: 1fr 1fr;
@@ -354,7 +385,7 @@ section#today {
     margin-bottom: 1vw;
     article {
       margin: 4px;
-      padding: 0.5rem;
+      padding: min(0.5rem, 1vw);
       flex: 1;
       min-width: max-content;
       font-family: var(--h-font);
@@ -579,7 +610,7 @@ footer {
   aside#location-sidebar {
     position: relative;
     top: 0;
-    display: block;
+    display: flex;
     grid-row: 2/-2;
     max-width: 35ch;
     background-color: var(--current-ui-bg);

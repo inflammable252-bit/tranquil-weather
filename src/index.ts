@@ -76,6 +76,10 @@ function changeMode(mode: string) {
     "--current-footer-color",
     "var(--footer-color-" + mode,
   );
+  root.style.setProperty(
+    "--current-logo-gradient",
+    "var(--logo-gradient-" + mode,
+  );
 }
 
 function setToggle(mode: string) {
@@ -133,26 +137,52 @@ const sidebarButton = document.getElementById(
 ) as HTMLButtonElement;
 
 sidebarButton.addEventListener("click", () => {
-  addLoc(location);
+  addItem(location);
 });
 
-function addLoc(loc: string) {
+function addItem(loc: string) {
   const item = document.createElement("li");
   item.classList.add("location-item");
-  item.textContent = String(loc);
-  if (sidebarUl.lastChild?.textContent == loc) return;
+
+  if (sidebarUl.lastChild?.firstChild?.textContent == loc) return;
+
+  item.append(addLoc(loc));
+  item.append(addDelete());
   sidebarUl.append(item);
-  item.addEventListener("click", (e) => {
+
+  item.addEventListener("click", (e: Event) => {
     const target = e.target as HTMLElement;
+    if (target.className == "delete-item") return;
     const targetLocation = target.textContent;
+    console.log(target);
     if (!target || toUpper(targetLocation) == toUpper(location)) return;
     goToLoc(targetLocation);
   });
+}
+function addLoc(loc: string) {
+  const itemText = document.createElement("p");
+  itemText.textContent = String(loc);
+  return itemText;
+}
+function addDelete() {
+  const del = document.createElement("button");
+  del.textContent = "x";
+  del.classList.add("delete-item");
+
+  del.addEventListener("click", (e) => deleteLoc(e));
+
+  return del;
 }
 
 function goToLoc(tarLocation: string) {
   location = tarLocation;
   initialize();
+}
+
+function deleteLoc(event: Event) {
+  const target = event.target as HTMLElement;
+  const parent = target.parentElement;
+  parent?.remove();
 }
 
 // Unit

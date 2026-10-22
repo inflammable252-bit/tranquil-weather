@@ -27,8 +27,7 @@ let unitWind: string;
 let retrievalTime: string | undefined;
 let queryMS: number;
 let currentMode = "night";
-
-initialize();
+let savedLocations: string[];
 
 async function initialize() {
   const start = performance.now();
@@ -36,6 +35,7 @@ async function initialize() {
   mainConnection.setUnit(unitGlobal);
   unitWind = mainConnection.unit === "metric" ? "km/h" : "mph";
   try {
+    console.log("Initialized location: ", location);
     const data = await mainConnection.getData();
     retrievalTime = data?.currentConditions.datetime;
     const end = performance.now();
@@ -44,6 +44,28 @@ async function initialize() {
   } catch (error) {
     console.log("Unable to retrieve data: " + error);
     return;
+  }
+}
+
+async function loadLocations() {
+  try {
+    const retrievedLoc = localStorage.getItem("savedLocations");
+    if (retrievedLoc) {
+      savedLocations = JSON.parse(retrievedLoc);
+      console.log(retrievedLoc);
+    } else {
+      throw new Error("No saved data.");
+    }
+  } catch (error) {
+    savedLocations = [
+      "Los Angeles, CA, United States",
+      "Anchorage, AK, United States",
+      "Des Moines, IA, United States",
+      "Waikiki, Honolulu, HI, United States",
+    ];
+    if (error instanceof Error) console.log(error.message);
+  } finally {
+    updateSidebar(savedLocations);
   }
 }
 
@@ -100,15 +122,62 @@ setToggle(currentMode);
 // Search
 const searchForm = document.getElementById("search-form") as HTMLFormElement;
 const searchbar = document.getElementById("searchbar") as HTMLInputElement;
+const searchbarMsg = document.getElementById("searchbar-msg");
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();
   location = searchbar.value;
-
   initialize();
+  searchCheck(location);
   searchbar.value = "";
 });
 
-// City/Town and State/Province/Region
+function searchCheck(loc: string) {
+  if (!loc.includes(",")) {
+    console.log("msg on");
+    // searchbarMsg?.classList.add("msg-on");
+    searchbarMsg!.animate(
+      [
+        {
+          visibility: "visible",
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+          offset: 0.1,
+        },
+        {
+          opacity: 0,
+          visibility: "hidden",
+        },
+      ],
+      10000,
+    );
+  } else {
+    searchbarMsg!.style.visibility = "hidden";
+    searchbarMsg!.style.opacity = "0";
+    console.log("msg off");
+  }
+}
+
+// localStorage
+function saveLoc(loc: string) {
+  savedLocations.push(loc);
+  const jsonLoc = JSON.stringify(savedLocations);
+  localStorage.setItem("savedLocations", jsonLoc);
+  console.log("Saving location: ", loc);
+  console.log("Current locations: " + savedLocations);
+}
+function updateLocStorage() {
+  const updatedStorage = JSON.stringify(savedLocations);
+  localStorage.setItem("savedLocations", updatedStorage);
+  console.log("Saved locations updated!" + savedLocations);
+}
+
+function addLoc(loc: string) {
+  const itemText = document.createElement("p");
+  itemText.textContent = String(loc);
+  return itemText;
+}
 
 // Sidebar
 const sidebarIcon = document.getElementById("sidebar-button");
@@ -132,19 +201,29 @@ sidebarHide?.addEventListener("click", (e) => {
 });
 
 const sidebarUl = document.getElementById("location-list") as HTMLUListElement;
-const sidebarButton = document.getElementById(
+const sidebarAddButton = document.getElementById(
   "location-add",
 ) as HTMLButtonElement;
 
-sidebarButton.addEventListener("click", () => {
+sidebarAddButton.addEventListener("click", () => {
+  // if (sidebarUl.lastChild?.firstChild?.textContent === location) return;
+  if (savedLocations.includes(location)) {
+    console.log("Location already added.");
+    return;
+  }
   addItem(location);
+  saveLoc(location);
 });
+
+function updateSidebar(arr: string[]) {
+  arr.forEach((item) => {
+    addItem(item);
+  });
+}
 
 function addItem(loc: string) {
   const item = document.createElement("li");
   item.classList.add("location-item");
-
-  if (sidebarUl.lastChild?.firstChild?.textContent == loc) return;
 
   item.append(addLoc(loc));
   item.append(addDelete());
@@ -153,17 +232,14 @@ function addItem(loc: string) {
   item.addEventListener("click", (e: Event) => {
     const target = e.target as HTMLElement;
     if (target.className == "delete-item") return;
-    const targetLocation = target.textContent;
-    console.log(target);
+    const p = target.firstChild as HTMLParagraphElement;
+    const targetLocation = p.textContent;
     if (!target || toUpper(targetLocation) == toUpper(location)) return;
+    console.log("Going to " + targetLocation);
     goToLoc(targetLocation);
   });
 }
-function addLoc(loc: string) {
-  const itemText = document.createElement("p");
-  itemText.textContent = String(loc);
-  return itemText;
-}
+
 function addDelete() {
   const del = document.createElement("button");
   del.textContent = "x";
@@ -181,8 +257,14 @@ function goToLoc(tarLocation: string) {
 
 function deleteLoc(event: Event) {
   const target = event.target as HTMLElement;
-  const parent = target.parentElement;
-  parent?.remove();
+  const li = target.parentElement;
+  const ul = li?.parentElement;
+  if (!li || !ul) return;
+  const index = [...ul.children].indexOf(li);
+  console.log(`Removed item ${index}: ${savedLocations[index]}.`);
+  li.remove();
+  savedLocations.splice(index, 1);
+  updateLocStorage();
 }
 
 // Unit
@@ -217,6 +299,23 @@ function updateEleText(id: string, value: string | number) {
   }
   element.textContent = String(value);
 }
+
+function formLocName(address: string) {
+  let locationName;
+  if (address.includes(",")) {
+    locationName = address;
+  } else {
+    const newAddress: (string | undefined)[] = [];
+    const addressArray = address.split(" ");
+    addressArray.forEach((word: string | undefined) => {
+      newAddress.push(toUpper(word));
+    });
+    locationName = newAddress.join(" ");
+  }
+  console.log("Location resolved to: ", locationName);
+  return locationName;
+}
+
 function updateCurrentSection(data: weatherType | undefined) {
   if (!data) return;
 
@@ -226,22 +325,7 @@ function updateCurrentSection(data: weatherType | undefined) {
   );
 
   const dataAddress = data.resolvedAddress;
-  if (dataAddress.includes(",")) {
-    location = dataAddress;
-    // addressArr.forEach((word: string | number) => {
-    //   if (typeof word == "string") {
-    //     address.push(toUpper(word));
-    //   }
-    // });
-    // location = address.join(" ");
-  } else {
-    const address: (string | undefined)[] = [];
-    const addressArr = dataAddress.split(" ");
-    addressArr.forEach((word: string | undefined) => {
-      address.push(toUpper(word));
-    });
-    location = address.join(" ");
-  }
+  location = formLocName(dataAddress);
   updateEleText(domCurrent.loc, location);
 
   updateEleText(
@@ -619,6 +703,8 @@ function initializeAllSections(data: weatherType | undefined) {
   updateFooter();
 }
 
+initialize();
+loadLocations();
 // Object.entries(domCurrent).forEach((item) => {
 //   console.log(item);
 // });

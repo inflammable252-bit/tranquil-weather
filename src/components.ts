@@ -23,21 +23,13 @@ class Connection {
     this.location = location;
     this.unit = "us";
   }
-  public weatherData?: weatherType;
+  public weatherData?: weatherType | undefined;
   #getKey() {
     return process.env.VC_KEY;
   }
   sayKey() {
     console.log("private key: ", this.#getKey());
   }
-  // try() {
-  //     try {
-  //         if (process.env.nothing === undefined) throw new Error("Whoops")
-  //         console.log(process.env.nothing)
-  //     } catch (error) {
-  //         console.log((error as Error).message, "Doesn't exist!")
-  //     }
-  // }
   protected async request() {
     try {
       const response = await fetch(
@@ -47,6 +39,7 @@ class Connection {
       this.weatherData = data;
     } catch (error) {
       console.error("Unable to retrieve location.", error);
+      this.weatherData = undefined;
     }
   }
   setLoc(loc: string | number) {

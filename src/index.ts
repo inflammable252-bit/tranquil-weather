@@ -21,6 +21,7 @@ import {
 
 let location: string;
 location = "waikiki";
+let prevLoc: string;
 const mainConnection = new Connection(location);
 let unitGlobal = "F";
 let unitWind: string;
@@ -30,20 +31,32 @@ let currentMode = "night";
 let savedLocations: string[];
 
 async function initialize() {
+  setProgress("reset");
+  pulseBar("reset");
   const start = performance.now();
   mainConnection.setLoc(location);
   mainConnection.setUnit(unitGlobal);
   unitWind = mainConnection.unit === "metric" ? "km/h" : "mph";
   try {
-    console.log("Initialized location: ", location);
+    setProgress("set", 10);
     const data = await mainConnection.getData();
+    if (!data) {
+      location = prevLoc;
+      throw new Error("Location not found.");
+    }
+    console.log("Initialized location: ", location);
     retrievalTime = data?.currentConditions.datetime;
     const end = performance.now();
     queryMS = end - start;
+    setProgress("set", 50);
     initializeAllSections(data);
+    pulseBar("success");
+    prevLoc = location;
+    return true;
   } catch (error) {
-    console.log("Unable to retrieve data: " + error);
-    return;
+    console.log(error);
+    displayFail();
+    return false;
   }
 }
 
@@ -122,40 +135,39 @@ setToggle(currentMode);
 // Search
 const searchForm = document.getElementById("search-form") as HTMLFormElement;
 const searchbar = document.getElementById("searchbar") as HTMLInputElement;
-const searchbarMsg = document.getElementById("searchbar-msg");
-searchForm.addEventListener("submit", (e) => {
+searchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   location = searchbar.value;
-  initialize();
-  searchCheck(location);
-  searchbar.value = "";
+  const success = await initialize();
+  if (!success) {
+    displayFail();
+  } else {
+    searchCheck(location);
+    searchbar.value = "";
+  }
 });
 
+function displayFail() {
+  pulseBar("fail");
+  setProgress("set", 1);
+  animateMsg("No location found!");
+  setTimeout(() => {
+    setProgress("set", 100);
+  }, 1500);
+}
+
 function searchCheck(loc: string) {
-  if (!loc.includes(",")) {
-    console.log("msg on");
-    // searchbarMsg?.classList.add("msg-on");
-    searchbarMsg!.animate(
-      [
-        {
-          visibility: "visible",
-          opacity: 0,
-        },
-        {
-          opacity: 1,
-          offset: 0.1,
-        },
-        {
-          opacity: 0,
-          visibility: "hidden",
-        },
-      ],
-      10000,
+  hideMsg();
+  const checkForTwoOrMoreSpaces = (loc: string) => {
+    const count = loc.split(" ").length;
+    return count >= 3;
+  };
+  if (!checkForTwoOrMoreSpaces(loc) && !loc.includes(",")) {
+    animateMsg(
+      "For more accurate results, enter a city and a state, province, or region.",
     );
   } else {
-    searchbarMsg!.style.visibility = "hidden";
-    searchbarMsg!.style.opacity = "0";
-    console.log("msg off");
+    hideMsg();
   }
 }
 
@@ -365,6 +377,12 @@ function updateAlertSection(data: weatherType | undefined) {
   });
 }
 
+function createHead(text: string) {
+  const head = document.createElement("p");
+  head.textContent = text;
+  return head;
+}
+
 function updateTodaySection(data: weatherType | undefined) {
   if (!data) return;
 
@@ -372,7 +390,7 @@ function updateTodaySection(data: weatherType | undefined) {
   const feelsCard = document.getElementById(domTodayInfo.feels);
   const feelsText = document.createElement("p");
   feelsText.textContent = String(data.days[0]!.feelslike + unitGlobal);
-  feelsCard!.replaceChildren("Feels like", feelsText);
+  feelsCard!.replaceChildren(createHead("Feels like"), feelsText);
 
   // Wind
   const windCard = document.getElementById(domTodayInfo.wind);
@@ -388,30 +406,32 @@ function updateTodaySection(data: weatherType | undefined) {
     windImg.src = windSpeedValue <= 25 ? normalArrow : doubleArrow;
   if (mainConnection.unit === "metric")
     windImg.src = windSpeedValue <= 39 ? normalArrow : doubleArrow;
-  const windTitleText = document.createElement("p");
-  windTitleText.textContent = "Wind";
-  windCard!.replaceChildren(windTitleText, windDirText, windImg, windSpeedText);
+  windCard!.replaceChildren(
+    createHead("Wind"),
+    windDirText,
+    windImg,
+    windSpeedText,
+  );
 
   // Humidity
   const humidityCard = document.getElementById(domTodayInfo.humidity);
   const humidityText = document.createElement("p");
   humidityText.textContent = String(data.currentConditions.humidity + "%");
-  humidityCard!.replaceChildren("Humidity", humidityText);
+  humidityCard!.replaceChildren(createHead("Humidity"), humidityText);
 
   // UV
   const uvCard = document.getElementById(domTodayInfo.uv);
   const uvText = document.createElement("p");
   uvText.textContent = String(data.currentConditions.uvindex);
-  uvCard!.replaceChildren("UV Index", uvText);
+  uvCard!.replaceChildren(createHead("UV Index"), uvText);
 
   // AQI
   const airCard = document.getElementById(domTodayInfo.air);
   const airText = document.createElement("p");
   airText.textContent = String(data.currentConditions.aqius);
-  const aqiTextFull = "Air Quality";
   const aqiText = document.createElement("p");
   aqiText.textContent = "(AQI)";
-  airCard!.replaceChildren(aqiTextFull, aqiText, airText);
+  airCard!.replaceChildren(createHead("Air Quality"), aqiText, airText);
 }
 
 function getWindDir(angle: number) {
@@ -701,6 +721,73 @@ function initializeAllSections(data: weatherType | undefined) {
   updateHourSection(data);
   updateForecast(data);
   updateFooter();
+  setProgress("set", 100);
+}
+
+const progressBar = document.getElementById("load-bar-prog") as HTMLDivElement;
+const progressBarBg = document.getElementById("load-bar") as HTMLDivElement;
+
+function setProgress(
+  action: "increase" | "reset" | "set",
+  amt?: number | string,
+) {
+  if (!progressBar) return;
+  switch (action) {
+    case "increase":
+      if (!amt) return;
+      progressBar.style.width += amt + "%";
+      break;
+    case "reset":
+      progressBar.style.width = "0px";
+      break;
+    case "set":
+      if (!amt) return;
+      progressBar.style.width = amt + "%";
+      break;
+  }
+}
+function pulseBar(status: "reset" | "success" | "fail") {
+  switch (status) {
+    case "reset":
+      progressBar.style.animation = "none";
+      progressBarBg.style.animation = "none";
+      break;
+    case "success":
+      progressBar.style.animation = "0.7s ease-in-out 2 pulse-white";
+      break;
+    case "fail":
+      progressBarBg.style.animation = "0.5s ease-in-out 2.5 pulse-red";
+      break;
+  }
+}
+
+// Other
+const searchbarMsg = document.getElementById(
+  "searchbar-msg",
+) as HTMLParagraphElement;
+function animateMsg(msg: string) {
+  searchbarMsg!.textContent = msg;
+  searchbarMsg!.animate(
+    [
+      {
+        visibility: "visible",
+        opacity: 0,
+      },
+      {
+        opacity: 1,
+        offset: 0.05,
+      },
+      {
+        opacity: 0,
+        visibility: "hidden",
+      },
+    ],
+    9000,
+  );
+}
+function hideMsg() {
+  searchbarMsg!.style.visibility = "hidden";
+  searchbarMsg!.style.opacity = "0";
 }
 
 initialize();

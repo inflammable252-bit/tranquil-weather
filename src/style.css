@@ -105,16 +105,17 @@ body {
 }
 
 header {
+  position: relative;
   display: grid;
   grid-auto-flow: column;
   grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   height: fit-content;
   max-width: 100%;
-  padding: max(0.5rem, 1vw) 1vw;
+  padding: max(0.5rem, 1vw) 1vw 0;
   align-items: start;
   justify-items: start;
-  border-bottom: 3px solid var(--current-ui-border);
+  /* border-bottom: 3px solid var(--current-ui-border); */
 
   h1 {
     font-size: clamp(1.5rem, 3vw, 2.2rem);
@@ -159,6 +160,25 @@ header {
     justify-self: flex-end;
     option {
       color: #000;
+    }
+  }
+
+  div#load-bar {
+    position: relative;
+    grid-row: 3/4;
+    grid-column: 1/-1;
+    margin: 1vw 0;
+    background-color: #00000044;
+    border: none;
+    width: 100%;
+    height: 4px;
+    z-index: -1;
+    div#load-bar-prog {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      background-color: #ffffffab;
+      transition: width 0.1s linear;
     }
   }
 }
@@ -434,15 +454,26 @@ section#today {
       font-family: var(--p-font);
     }
 
+    p:first-child {
+      align-self: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    article#air-quality {
+      p:nth-child(2) {
+        font-size: 0.9rem;
+        color: #ffffffc4;
+        line-height: 0.8;
+        font-style: italic;
+      }
+    }
     article#wind {
       display: grid;
       grid-template-columns: auto auto;
       grid-template-rows: auto auto auto;
       column-gap: 0.5rem;
       p:first-child {
-        align-self: center;
-        font-size: 1.2rem;
-        font-weight: 600;
         grid-row: 1/2;
         grid-column: 1/-1;
       }
@@ -692,5 +723,29 @@ footer {
 
   to {
     background-position-x: var(--bg-width);
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    background-color: #ffffffab;
+  }
+  50% {
+    background-color: rgba(241, 32, 32, 0.418);
+  }
+  100% {
+    background-color: #ffffffab;
+  }
+}
+@keyframes pulse-white {
+  0% {
+    background-color: #ffffffab;
+  }
+  50% {
+    background-color: #fff;
+    box-shadow: 0 0 4px #fff;
+  }
+  100% {
+    background-color: #ffffffab;
   }
 }

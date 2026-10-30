@@ -270,6 +270,9 @@ aside#location-sidebar {
   li:hover {
     transform: scale(1.05);
   }
+  li.selected-item {
+    background-color: color-mix(var(--sub-card-bg), #fff 20%);
+  }
   button.delete-item {
     align-self: start;
     font-size: 12px;
@@ -540,8 +543,8 @@ article.card.forecast {
 }
 
 img.precip-icon {
-  height: 1.5rem;
-  width: 1.5rem;
+  height: 1.4rem;
+  width: 1.4rem;
 }
 
 img.weather-icons {
@@ -627,6 +630,26 @@ footer {
     color: var(--current-footer-color);
     text-decoration: none;
     line-height: 1;
+    transition: color 0.2s ease-in-out;
+  }
+  p#links {
+    display: flex;
+    flex-direction: column;
+  }
+  a:hover {
+    animation: 0.75s 1 link-hover ease-in-out;
+  }
+}
+
+@keyframes link-hover {
+  0% {
+    color: var(--current-footer-color);
+  }
+  25% {
+    color: color-mix(var(--current-bg-color), #fff 75%);
+  }
+  100% {
+    color: var(--current-footer-color);
   }
 }
 

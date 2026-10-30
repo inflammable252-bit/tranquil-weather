@@ -20,9 +20,8 @@ import {
 } from "./icon-imports.js";
 
 let location: string;
-location = "waikiki";
 let prevLoc: string;
-const mainConnection = new Connection(location);
+let mainConnection: Connection;
 let unitGlobal = "F";
 let unitWind: string;
 let retrievalTime: string | undefined;
@@ -34,6 +33,7 @@ async function initialize() {
   setProgress("reset");
   pulseBar("reset");
   const start = performance.now();
+  mainConnection = new Connection(location);
   mainConnection.setLoc(location);
   mainConnection.setUnit(unitGlobal);
   unitWind = mainConnection.unit === "metric" ? "km/h" : "mph";
@@ -60,26 +60,38 @@ async function initialize() {
   }
 }
 
-async function loadLocations() {
+function loadLocations() {
   try {
-    const retrievedLoc = localStorage.getItem("savedLocations");
-    if (retrievedLoc) {
-      savedLocations = JSON.parse(retrievedLoc);
-      console.log(retrievedLoc);
+    savedLocations = getSavedLoc();
+    if (savedLocations) {
+      location = localStorage.getItem("currentLoc") || savedLocations[0]!;
+      console.log("Storage data retrieved.");
     } else {
       throw new Error("No saved data.");
     }
   } catch (error) {
+    console.log("No saved data.");
     savedLocations = [
       "Los Angeles, CA, United States",
       "Anchorage, AK, United States",
-      "Des Moines, IA, United States",
       "Waikiki, Honolulu, HI, United States",
     ];
+    location = savedLocations[0]!;
+    const locToSave = JSON.stringify(savedLocations);
+    localStorage.setItem("savedLocations", locToSave);
     if (error instanceof Error) console.log(error.message);
   } finally {
     updateSidebar(savedLocations);
+    highlightSidebarItem(location);
+    console.log({
+      savedLocations: savedLocations,
+      location: location,
+    });
   }
+}
+function getSavedLoc() {
+  const retrievedLoc = localStorage.getItem("savedLocations") || "";
+  return JSON.parse(retrievedLoc);
 }
 
 // Footer
@@ -175,6 +187,7 @@ function searchCheck(loc: string) {
 function saveLoc(loc: string) {
   savedLocations.push(loc);
   const jsonLoc = JSON.stringify(savedLocations);
+  localStorage.setItem("currentLoc", location);
   localStorage.setItem("savedLocations", jsonLoc);
   console.log("Saving location: ", loc);
   console.log("Current locations: " + savedLocations);
@@ -218,13 +231,13 @@ const sidebarAddButton = document.getElementById(
 ) as HTMLButtonElement;
 
 sidebarAddButton.addEventListener("click", () => {
-  // if (sidebarUl.lastChild?.firstChild?.textContent === location) return;
   if (savedLocations.includes(location)) {
     console.log("Location already added.");
     return;
   }
   addItem(location);
   saveLoc(location);
+  localStorage.setItem("currentLoc", location);
 });
 
 function updateSidebar(arr: string[]) {
@@ -240,6 +253,7 @@ function addItem(loc: string) {
   item.append(addLoc(loc));
   item.append(addDelete());
   sidebarUl.append(item);
+  highlightSidebarItem(location);
 
   item.addEventListener("click", (e: Event) => {
     const target = e.target as HTMLElement;
@@ -247,8 +261,9 @@ function addItem(loc: string) {
     const p = target.firstChild as HTMLParagraphElement;
     const targetLocation = p.textContent;
     if (!target || toUpper(targetLocation) == toUpper(location)) return;
-    console.log("Going to " + targetLocation);
     goToLoc(targetLocation);
+    highlightSidebarItem(targetLocation);
+    localStorage.setItem("currentLoc", targetLocation);
   });
 }
 
@@ -277,6 +292,20 @@ function deleteLoc(event: Event) {
   li.remove();
   savedLocations.splice(index, 1);
   updateLocStorage();
+}
+
+function highlightSidebarItem(itemName: string) {
+  if (itemName) {
+    const sidebarArr = Array.from(sidebarUl.children);
+    sidebarArr.forEach((item) => {
+      const itemPText = item.children[0]!.textContent;
+      if (itemPText.toUpperCase() === itemName.toUpperCase()) {
+        item.classList.add("selected-item");
+      } else {
+        item.classList.remove("selected-item");
+      }
+    });
+  }
 }
 
 // Unit
@@ -446,12 +475,12 @@ addScroll(hourWrapper);
 
 function updateHourSection(data: weatherType) {
   if (!data) return;
-  const hoursArr = getNext12Hours(data.days);
+  const hoursArr = getNext24Hours(data.days);
   console.log("hours array: ", hoursArr);
   createHourCards(hoursArr, hourWrapper);
 }
 
-function getNext12Hours(days: dayType[]) {
+function getNext24Hours(days: dayType[]) {
   if (!days[0] || !days[1]) {
     console.log("No days found!");
     return;
@@ -462,9 +491,9 @@ function getNext12Hours(days: dayType[]) {
   const now = new Date();
   const hourStartIndex = now.getHours() + 1;
 
-  const next12Hours = [];
+  const next24Hours = [];
 
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 24; i++) {
     let day = currentDay;
     let hour = day.hours[hourStartIndex + i];
     // console.log(hour);
@@ -472,13 +501,13 @@ function getNext12Hours(days: dayType[]) {
       day = nextDay;
       for (let j = 0; j < 12 - i; j++) {
         hour = day.hours[j];
-        next12Hours.push(hour);
+        next24Hours.push(hour);
       }
       break;
     }
-    next12Hours.push(hour);
+    next24Hours.push(hour);
   }
-  return next12Hours;
+  return next24Hours;
 }
 
 function createHourCards(
@@ -610,8 +639,6 @@ function createForecastCards(
     wrapper.append(card);
   });
 }
-
-// note: builder fn for expanded info section on click
 
 function insertIcon(
   dayOrHour: (dayType | hourType) | undefined,
@@ -775,7 +802,7 @@ function animateMsg(msg: string) {
       },
       {
         opacity: 1,
-        offset: 0.05,
+        offset: 0.02,
       },
       {
         opacity: 0,
@@ -790,8 +817,5 @@ function hideMsg() {
   searchbarMsg!.style.opacity = "0";
 }
 
-initialize();
 loadLocations();
-// Object.entries(domCurrent).forEach((item) => {
-//   console.log(item);
-// });
+initialize();

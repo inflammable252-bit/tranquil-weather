@@ -776,8 +776,6 @@ function initializeAllSections(data: weatherType | undefined) {
   updateForecast(data);
   updateFooter();
   setProgress("set", 100);
-
-  console.log({ autoMode: autoMode, currentMode: currentMode });
 }
 
 const progressBar = document.getElementById("load-bar-prog") as HTMLDivElement;

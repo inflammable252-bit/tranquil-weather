@@ -220,6 +220,7 @@ main {
 aside#location-sidebar {
   --pad: clamp(0.1rem, 2vw, 0.5rem);
 
+  height: fit-content;
   display: none;
   position: absolute;
   top: 10%;

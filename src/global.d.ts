@@ -13,6 +13,7 @@ declare module "*.svg" {
 interface weatherType {
   resolvedAddress: string;
   currentConditions: {
+    sunrise: string;
     datetime: "string";
     sunset: "string";
     temp: number;

@@ -145,12 +145,20 @@ function determineDayOrNight(
   dataCurrentConditions: weatherType["currentConditions"],
 ) {
   const datetime = dataCurrentConditions.datetime;
+  const sunrise = dataCurrentConditions.sunrise;
   const sunset = dataCurrentConditions.sunset;
-  if (datetime <= sunset) {
+  if (datetime > sunrise && datetime < sunset) {
     currentMode = "day";
-  } else {
+  }
+  if (datetime >= sunset || datetime < sunrise) {
     currentMode = "night";
   }
+  console.log({
+    datetime: datetime,
+    sunrise: sunrise,
+    sunset: sunset,
+    currentMode: currentMode,
+  });
 }
 
 function setToggle(mode: string) {

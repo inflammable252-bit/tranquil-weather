@@ -14,6 +14,7 @@ interface weatherType {
   resolvedAddress: string;
   currentConditions: {
     datetime: "string";
+    sunset: "string";
     temp: number;
     conditions: string;
     winddir: number;

@@ -27,6 +27,7 @@ let unitWind: string;
 let retrievalTime: string | undefined;
 let queryMS: number;
 let currentMode = "night";
+let autoMode: boolean = true;
 let savedLocations: string[];
 
 async function initialize() {
@@ -88,6 +89,9 @@ function loadLocations() {
       location: location,
     });
   }
+  const autoModeString = localStorage.getItem("autoMode");
+  autoMode = autoModeString ? JSON.parse(autoModeString) : true;
+  currentMode = localStorage.getItem("currentMode") || "night";
 }
 function getSavedLoc() {
   const retrievedLoc = localStorage.getItem("savedLocations") || "";
@@ -107,11 +111,19 @@ function updateFooter() {
   if (!queryInfo) return;
   queryInfo.textContent = buildQueryText();
 }
+
 // Mode
 const modeSelect = document.getElementById("mode-select") as HTMLSelectElement;
 modeSelect?.addEventListener("change", () => {
-  currentMode = modeSelect.value;
-  changeMode(currentMode);
+  if (modeSelect.value !== "auto") {
+    currentMode = modeSelect.value;
+    changeMode(currentMode);
+    autoMode = false;
+  } else {
+    autoMode = true;
+  }
+  localStorage.setItem("autoMode", JSON.stringify(autoMode));
+  localStorage.setItem("currentMode", currentMode);
 });
 
 function changeMode(mode: string) {
@@ -129,20 +141,31 @@ function changeMode(mode: string) {
   );
 }
 
+function determineDayOrNight(
+  dataCurrentConditions: weatherType["currentConditions"],
+) {
+  const datetime = dataCurrentConditions.datetime;
+  const sunset = dataCurrentConditions.sunset;
+  if (datetime <= sunset) {
+    currentMode = "day";
+  } else {
+    currentMode = "night";
+  }
+}
+
 function setToggle(mode: string) {
   let selectIndex = 0;
+  if (autoMode) return;
   switch (mode) {
     case "day":
-      selectIndex = 0;
+      selectIndex = 1;
       break;
     case "night":
-      selectIndex = 1;
+      selectIndex = 2;
       break;
   }
   modeSelect[selectIndex]!.setAttribute("selected", "");
 }
-
-setToggle(currentMode);
 
 // Search
 const searchForm = document.getElementById("search-form") as HTMLFormElement;
@@ -150,6 +173,7 @@ const searchbar = document.getElementById("searchbar") as HTMLInputElement;
 searchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   location = searchbar.value;
+  highlightSidebarItem(" ");
   const success = await initialize();
   if (!success) {
     displayFail();
@@ -742,6 +766,9 @@ function addScroll(container: HTMLElement | null) {
 }
 function initializeAllSections(data: weatherType | undefined) {
   if (!data) return;
+  setToggle(currentMode);
+  if (autoMode) determineDayOrNight(data.currentConditions);
+  changeMode(currentMode);
   updateCurrentSection(data);
   updateTodaySection(data);
   updateAlertSection(data);
@@ -749,6 +776,8 @@ function initializeAllSections(data: weatherType | undefined) {
   updateForecast(data);
   updateFooter();
   setProgress("set", 100);
+
+  console.log({ autoMode: autoMode, currentMode: currentMode });
 }
 
 const progressBar = document.getElementById("load-bar-prog") as HTMLDivElement;

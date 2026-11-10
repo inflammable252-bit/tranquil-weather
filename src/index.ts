@@ -644,6 +644,29 @@ function createForecastCards(
     const dateDay = day.datetime.slice(8);
     date.textContent = `${dateMonth}/${dateDay}`;
 
+    // Day
+    const dayText = document.createElement("p");
+    dayText.classList.add("forecast-day");
+    const cardIndex = getCardCount(wrapper) || 0;
+    const dateToday = new Date();
+    const newDay = addDays(dateToday, cardIndex).getDay();
+
+    const daysOfTheWeek = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const dayOfTheWeek = daysOfTheWeek[newDay];
+
+    dayText.textContent = dayOfTheWeek || "";
+    console.log(
+      `${dateMonth}/${dateDay} is index ${cardIndex} and the day is ${dayOfTheWeek}`,
+    );
+
     // Icon
     const icon = document.createElement("img");
     insertIcon(day, icon);
@@ -667,9 +690,26 @@ function createForecastCards(
 
     insertPrecip("forecast", day, forecastPrecipWrapper);
 
-    card.append(date, icon, forecastTemp, conditions, forecastPrecipWrapper);
+    card.append(
+      date,
+      dayText,
+      icon,
+      forecastTemp,
+      conditions,
+      forecastPrecipWrapper,
+    );
     wrapper.append(card);
   });
+}
+
+function getCardCount(wrapper: HTMLElement | null) {
+  if (wrapper) return wrapper.children.length;
+}
+
+function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
 }
 
 function insertIcon(

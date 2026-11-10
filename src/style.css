@@ -613,6 +613,21 @@ article.card {
   padding: 0.5rem 0.2rem;
 }
 
+article.card.hour > p:first-child {
+  font-weight: 600;
+}
+
+article.card.forecast {
+  p:first-child,
+  p:nth-child(2) {
+    font-weight: 600;
+  }
+  p:nth-child(2) {
+    line-height: 1;
+    padding-bottom: 0.5rem;
+  }
+}
+
 div#info-wrapper,
 article.card.hour,
 article.card.forecast {
